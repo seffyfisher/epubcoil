@@ -7,12 +7,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js"></script>
     <style>
+        html {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
         #viewer {
+            margin-top: 50px;
             width: 100%;
-            height: 100vh;
+            height: 80vh;
             overflow: hidden;
             position: relative;
-            touch-action: pan-y; /* Prevent scrolling conflicts */
         }
         #controls {
             position: absolute;
@@ -29,6 +32,17 @@
             top: 10px;
             left: 10px;
             z-index: 100;
+        }
+        #pageInfo {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
         }
     </style>
 </head>
@@ -47,11 +61,12 @@
             <option value="sepia">Sepia</option>
         </select>
         <label for="fontSizeSlider">Font Size:</label>
-        <input type="range" id="fontSizeSlider" min="12" max="36" value="16">
+        <input type="range" id="fontSizeSlider" min="12" max="60" value="16">
         <span id="fontSizeValue">16px</span>
         <button id="goBack">Go Back</button>
     </div>
-    <div id="viewer"></div>
+    <div id="viewer" tabindex="0"></div>
+    <div id="pageInfo" style="display: none;">Page 1 / 1</div>
 
     <script>
         const viewer = document.getElementById('viewer');
@@ -64,27 +79,13 @@
         const fontSizeSlider = document.getElementById('fontSizeSlider');
         const fontSizeValue = document.getElementById('fontSizeValue');
         const themeSelect = document.getElementById('themeSelect');
+        const pageInfo = document.getElementById('pageInfo');
 
         let book;
         let rendition;
         let currentFontSize = 16; // Default font size
-
-        // Variables for swipe gesture
-        let touchStartX = 0;
-        let touchEndX = 0;
-
-        // Themes configuration
-        const themes = {
-            day: {
-                body: { background: "#ffffff", color: "#000000" }
-            },
-            night: {
-                body: { background: "#33333", color: "#ffffff" }
-            },
-            sepia: {
-                body: { background: "#f5deb3", color: "#5b4636" }
-            }
-        };
+        let currentPage = 1;
+        let totalPages = 1;
 
         // Handle EPUB file selection
         fileInput.addEventListener('change', (event) => {
@@ -92,7 +93,7 @@
             if (file) {
                 const reader = new FileReader();
 
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     const arrayBuffer = e.target.result;
 
                     // Load the EPUB file
@@ -101,25 +102,33 @@
                     // Create a rendition and render the book
                     rendition = book.renderTo('viewer', {
                         width: '100%',
-                        height: '100%',
+                        height: '100%'
                     });
 
-                    // Set default font size and theme
-                    rendition.themes.fontSize(`${currentFontSize}px`);
-                    rendition.themes.register('day', themes.day);
-                    rendition.themes.register('night', themes.night);
-                    rendition.themes.register('sepia', themes.sepia);
-                    rendition.themes.select('day');
-
-                    // Display the first page
+                    // Display the first page and calculate total pages
                     rendition.display();
+                    book.ready.then(() => {
+                        book.locations.generate().then(() => {
+                            const spineItems = book.spine.items;
+                            totalPages = spineItems.length;
+                            updatePageInfo(currentPage, totalPages);
+                            pageInfo.style.display = 'block';
+                        });
+                    });
+
+                    // Update current page on navigation
+                    rendition.on('relocated', (location) => {
+                        const spineIndex = location.start.index;
+                        currentPage = spineIndex + 1; // Pages start at index 0
+                        updatePageInfo(currentPage, totalPages);
+                    });
+
+                    // Set default font size
+                    rendition.themes.fontSize(`${currentFontSize}px`);
 
                     // Show controls and hide file input
                     controls.style.display = 'flex';
                     fileInputContainer.style.display = 'none';
-
-                    // Add swipe gesture support
-                    addSwipeGestures();
                 };
 
                 reader.readAsArrayBuffer(file);
@@ -128,29 +137,29 @@
 
         // Navigate to the previous page
         prevPageButton.addEventListener('click', () => {
-            if (rendition) {
+            if (rendition && currentPage > 1) {
                 rendition.prev();
             }
         });
 
         // Navigate to the next page
         nextPageButton.addEventListener('click', () => {
-            if (rendition) {
+            if (rendition && currentPage < totalPages) {
                 rendition.next();
             }
         });
 
         // Go back to the file selection
         goBackButton.addEventListener('click', () => {
-            // Destroy the current book and rendition
             if (rendition) {
                 rendition.destroy();
             }
-
-            // Reset UI elements
             controls.style.display = 'none';
             fileInputContainer.style.display = 'block';
             viewer.innerHTML = '';
+            pageInfo.style.display = 'none';
+            currentPage = 1;
+            totalPages = 1;
         });
 
         // Update font size when slider changes
@@ -162,46 +171,35 @@
             }
         });
 
-        // Change theme dynamically
-        themeSelect.addEventListener('change', (event) => {
-            const selectedTheme = event.target.value;
-            if (rendition && themes[selectedTheme]) {
-                rendition.themes.select(selectedTheme);
+
+        // Add global keyboard support
+        document.addEventListener('keydown', (event) => {
+            // Always blur active elements if not viewer
+            if (['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) {
+                event.target.blur();
+            }
+
+            if (rendition) {
+                switch (event.key) {
+                    case 'ArrowRight': // Next page
+                    case ' ':
+                    case 'Enter':
+                        rendition.next();
+                        break;
+                    case 'ArrowLeft': // Previous page
+                        rendition.prev();
+                        break;
+                    default:
+                        break;
+                }
             }
         });
 
-        // Add swipe gesture support
-        function addSwipeGestures() {
-            viewer.addEventListener('touchstart', (event) => {
-                touchStartX = event.touches[0].clientX;
-            });
-
-            viewer.addEventListener('touchmove', (event) => {
-                touchEndX = event.touches[0].clientX;
-            });
-
-            viewer.addEventListener('touchend', () => {
-                handleSwipe();
-            });
+        // Update page info display
+        function updatePageInfo(currentPage, totalPages) {
+            pageInfo.textContent = `Page ${currentPage} / ${totalPages}`;
         }
 
-        // Handle swipe gesture to change pages
-        function handleSwipe() {
-            const swipeThreshold = 50; // Minimum swipe distance in pixels
-            const swipeDistance = touchStartX - touchEndX;
-
-            if (swipeDistance > swipeThreshold) {
-                // Swipe left: Next page
-                if (rendition) {
-                    rendition.next();
-                }
-            } else if (swipeDistance < -swipeThreshold) {
-                // Swipe right: Previous page
-                if (rendition) {
-                    rendition.prev();
-                }
-            }
-        }
     </script>
 
 </body>
