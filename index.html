@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EPUB.js Reader</title>
+    <script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js"></script>
+    <style>
+        #viewer {
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+        #fileInput {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+
+    <input type="file" id="fileInput" accept=".epub" />
+    <div id="viewer"></div>
+
+    <script>
+        const viewer = document.getElementById('viewer');
+        const fileInput = document.getElementById('fileInput');
+        let book;
+
+        // Initialize EPUB.js when the file is selected
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Load the EPUB file
+                    book = ePub(e.target.result);
+                    // Render the EPUB inside the viewer
+                    book.renderTo(viewer);
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        });
+    </script>
+
+</body>
+</html>
