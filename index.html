@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EPUB.js Reader</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js"></script>
     <style>
         #viewer {
@@ -11,8 +12,19 @@
             height: 100vh;
             overflow: hidden;
             position: relative;
+            touch-action: pan-y; /* Prevent scrolling conflicts */
         }
-        #fileInput {
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        #fileInputContainer {
             position: absolute;
             top: 10px;
             left: 10px;
@@ -22,28 +34,174 @@
 </head>
 <body>
 
-    <input type="file" id="fileInput" accept=".epub" />
+    <div id="fileInputContainer">
+        <input type="file" id="fileInput" accept=".epub" />
+    </div>
+    <div id="controls" style="display: none;">
+        <button id="prevPage">Previous Page</button>
+        <button id="nextPage">Next Page</button>
+        <label for="themeSelect">Theme:</label>
+        <select id="themeSelect">
+            <option value="day">Day</option>
+            <option value="night">Night</option>
+            <option value="sepia">Sepia</option>
+        </select>
+        <label for="fontSizeSlider">Font Size:</label>
+        <input type="range" id="fontSizeSlider" min="12" max="36" value="16">
+        <span id="fontSizeValue">16px</span>
+        <button id="goBack">Go Back</button>
+    </div>
     <div id="viewer"></div>
 
     <script>
         const viewer = document.getElementById('viewer');
         const fileInput = document.getElementById('fileInput');
-        let book;
+        const controls = document.getElementById('controls');
+        const fileInputContainer = document.getElementById('fileInputContainer');
+        const prevPageButton = document.getElementById('prevPage');
+        const nextPageButton = document.getElementById('nextPage');
+        const goBackButton = document.getElementById('goBack');
+        const fontSizeSlider = document.getElementById('fontSizeSlider');
+        const fontSizeValue = document.getElementById('fontSizeValue');
+        const themeSelect = document.getElementById('themeSelect');
 
-        // Initialize EPUB.js when the file is selected
+        let book;
+        let rendition;
+        let currentFontSize = 16; // Default font size
+
+        // Variables for swipe gesture
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        // Themes configuration
+        const themes = {
+            day: {
+                body: { background: "#ffffff", color: "#000000" }
+            },
+            night: {
+                body: { background: "#33333", color: "#ffffff" }
+            },
+            sepia: {
+                body: { background: "#f5deb3", color: "#5b4636" }
+            }
+        };
+
+        // Handle EPUB file selection
         fileInput.addEventListener('change', (event) => {
             const file = event.target.files[0];
             if (file) {
                 const reader = new FileReader();
+
                 reader.onload = function(e) {
+                    const arrayBuffer = e.target.result;
+
                     // Load the EPUB file
-                    book = ePub(e.target.result);
-                    // Render the EPUB inside the viewer
-                    book.renderTo(viewer);
+                    book = ePub(arrayBuffer);
+
+                    // Create a rendition and render the book
+                    rendition = book.renderTo('viewer', {
+                        width: '100%',
+                        height: '100%',
+                    });
+
+                    // Set default font size and theme
+                    rendition.themes.fontSize(`${currentFontSize}px`);
+                    rendition.themes.register('day', themes.day);
+                    rendition.themes.register('night', themes.night);
+                    rendition.themes.register('sepia', themes.sepia);
+                    rendition.themes.select('day');
+
+                    // Display the first page
+                    rendition.display();
+
+                    // Show controls and hide file input
+                    controls.style.display = 'flex';
+                    fileInputContainer.style.display = 'none';
+
+                    // Add swipe gesture support
+                    addSwipeGestures();
                 };
+
                 reader.readAsArrayBuffer(file);
             }
         });
+
+        // Navigate to the previous page
+        prevPageButton.addEventListener('click', () => {
+            if (rendition) {
+                rendition.prev();
+            }
+        });
+
+        // Navigate to the next page
+        nextPageButton.addEventListener('click', () => {
+            if (rendition) {
+                rendition.next();
+            }
+        });
+
+        // Go back to the file selection
+        goBackButton.addEventListener('click', () => {
+            // Destroy the current book and rendition
+            if (rendition) {
+                rendition.destroy();
+            }
+
+            // Reset UI elements
+            controls.style.display = 'none';
+            fileInputContainer.style.display = 'block';
+            viewer.innerHTML = '';
+        });
+
+        // Update font size when slider changes
+        fontSizeSlider.addEventListener('input', (event) => {
+            currentFontSize = event.target.value;
+            fontSizeValue.textContent = `${currentFontSize}px`;
+            if (rendition) {
+                rendition.themes.fontSize(`${currentFontSize}px`);
+            }
+        });
+
+        // Change theme dynamically
+        themeSelect.addEventListener('change', (event) => {
+            const selectedTheme = event.target.value;
+            if (rendition && themes[selectedTheme]) {
+                rendition.themes.select(selectedTheme);
+            }
+        });
+
+        // Add swipe gesture support
+        function addSwipeGestures() {
+            viewer.addEventListener('touchstart', (event) => {
+                touchStartX = event.touches[0].clientX;
+            });
+
+            viewer.addEventListener('touchmove', (event) => {
+                touchEndX = event.touches[0].clientX;
+            });
+
+            viewer.addEventListener('touchend', () => {
+                handleSwipe();
+            });
+        }
+
+        // Handle swipe gesture to change pages
+        function handleSwipe() {
+            const swipeThreshold = 50; // Minimum swipe distance in pixels
+            const swipeDistance = touchStartX - touchEndX;
+
+            if (swipeDistance > swipeThreshold) {
+                // Swipe left: Next page
+                if (rendition) {
+                    rendition.next();
+                }
+            } else if (swipeDistance < -swipeThreshold) {
+                // Swipe right: Previous page
+                if (rendition) {
+                    rendition.prev();
+                }
+            }
+        }
     </script>
 
 </body>
