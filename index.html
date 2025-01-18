@@ -56,17 +56,17 @@
         <button id="nextPage">Next Page</button>
         <label for="themeSelect">Theme:</label>
         <select id="themeSelect">
-            <option value="day">Day</option>
-            <option value="night">Night</option>
-            <option value="sepia">Sepia</option>
+            <option value="day">יום</option>
+            <option value="night">לילה</option>
+            <option value="sepia">ספיה</option>
         </select>
         <label for="fontSizeSlider">Font Size:</label>
-        <input type="range" id="fontSizeSlider" min="12" max="60" value="16">
+        <input type="range" id="fontSizeSlider" min="12" max="60" value="26">
         <span id="fontSizeValue">16px</span>
         <button id="goBack">Go Back</button>
     </div>
     <div id="viewer" tabindex="0"></div>
-    <div id="pageInfo" style="display: none;">Page 1 / 1</div>
+    <div id="pageInfo" style="display: none;">עמוד 1 / 1</div>
 
     <script>
         const viewer = document.getElementById('viewer');
@@ -229,11 +229,14 @@
                 // Swipe left: Next page
                 if (rendition) {
                     rendition.next();
+                    alert('working next');
                 }
             } else if (swipeDistance < -swipeThreshold) {
                 // Swipe right: Previous page
                 if (rendition) {
                     rendition.prev();
+                    alert('working prev');
+
                 }
             }
         }
