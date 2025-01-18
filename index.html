@@ -98,6 +98,9 @@
 
                     // Load the EPUB file
                     book = ePub(arrayBuffer);
+                    // Variables for swipe gesture
+                    let touchStartX = 0;
+                    let touchEndX = 0;
 
                     // Create a rendition and render the book
                     rendition = book.renderTo('viewer', {
@@ -129,6 +132,8 @@
                     // Show controls and hide file input
                     controls.style.display = 'flex';
                     fileInputContainer.style.display = 'none';
+                            // Add swipe gesture support
+                            addSwipeGestures();
                 };
 
                 reader.readAsArrayBuffer(file);
@@ -198,6 +203,39 @@
         // Update page info display
         function updatePageInfo(currentPage, totalPages) {
             pageInfo.textContent = `Page ${currentPage} / ${totalPages}`;
+        }
+
+        // Add swipe gesture support
+        function addSwipeGestures() {
+            viewer.addEventListener('touchstart', (event) => {
+                touchStartX = event.touches[0].clientX;
+            });
+
+            viewer.addEventListener('touchmove', (event) => {
+                touchEndX = event.touches[0].clientX;
+            });
+
+            viewer.addEventListener('touchend', () => {
+                handleSwipe();
+            });
+        }
+
+        // Handle swipe gesture to change pages
+        function handleSwipe() {
+            const swipeThreshold = 50; // Minimum swipe distance in pixels
+            const swipeDistance = touchStartX - touchEndX;
+
+            if (swipeDistance > swipeThreshold) {
+                // Swipe left: Next page
+                if (rendition) {
+                    rendition.next();
+                }
+            } else if (swipeDistance < -swipeThreshold) {
+                // Swipe right: Previous page
+                if (rendition) {
+                    rendition.prev();
+                }
+            }
         }
 
     </script>
