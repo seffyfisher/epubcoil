@@ -222,20 +222,18 @@
 
         // Handle swipe gesture to change pages
         function handleSwipe() {
-            const swipeThreshold = 50; // Minimum swipe distance in pixels
+            const swipeThreshold = 10; // Minimum swipe distance in pixels
             const swipeDistance = touchStartX - touchEndX;
 
             if (swipeDistance > swipeThreshold) {
                 // Swipe left: Next page
                 if (rendition) {
                     rendition.next();
-                    alert('working next');
                 }
             } else if (swipeDistance < -swipeThreshold) {
                 // Swipe right: Previous page
                 if (rendition) {
                     rendition.prev();
-                    alert('working prev');
 
                 }
             }
