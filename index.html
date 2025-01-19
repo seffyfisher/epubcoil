@@ -9,29 +9,40 @@
     <style>
         html {
             font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+
+        }
+        body {
+            margin: 0;
+            padding: 0;
         }
         #viewer {
-            margin-top: 50px;
             width: 100%;
-            height: 80vh;
+            height: 100%;
             overflow: hidden;
             position: relative;
         }
-        #controls {
+        #viewer .click-region {
             position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 100;
-            display: flex;
-            gap: 10px;
-            align-items: center;
+            top: 0;
+            bottom: 0;
+            width: 50%;
+            z-index: 10;
         }
-        #fileInputContainer {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            z-index: 100;
+        #viewer .click-region.left {
+            left: 0;
+            width: 10vw;
+        }
+        #viewer .click-region.right {
+            right: 0;
+            width: 10vw;
+        }
+        #controls {
+            display: flex;
+            gap: 4px;
+            align-items: center;
         }
         #pageInfo {
             position: absolute;
@@ -48,34 +59,29 @@
 </head>
 <body>
 
-    <div id="fileInputContainer">
-        <input type="file" id="fileInput" accept=".epub" />
-    </div>
-    <div id="controls" style="display: none;">
-        <button id="prevPage">Previous Page</button>
-        <button id="nextPage">Next Page</button>
+    <div id="controls">
+        <button id="prevPage"><</button>
+        <button id="nextPage">></button>
         <label for="themeSelect">Theme:</label>
         <select id="themeSelect">
-            <option value="day">יום</option>
-            <option value="night">לילה</option>
-            <option value="sepia">ספיה</option>
+            <option value="day">Day</option>
+            <option value="night">Night</option>
+            <option value="sepia">Sepia</option>
         </select>
-        <label for="fontSizeSlider">Font Size:</label>
+        <label for="fontSizeSlider"> Size:</label>
         <input type="range" id="fontSizeSlider" min="12" max="60" value="26">
-        <span id="fontSizeValue">16px</span>
-        <button id="goBack">Go Back</button>
+        <span id="fontSizeValue">26px</span>
     </div>
-    <div id="viewer" tabindex="0"></div>
+    <div id="viewer" tabindex="0">
+       <div class="click-region left"></div>
+        <div class="click-region right"></div>
+    </div>
     <div id="pageInfo" style="display: none;">עמוד 1 / 1</div>
 
     <script>
         const viewer = document.getElementById('viewer');
-        const fileInput = document.getElementById('fileInput');
-        const controls = document.getElementById('controls');
-        const fileInputContainer = document.getElementById('fileInputContainer');
         const prevPageButton = document.getElementById('prevPage');
         const nextPageButton = document.getElementById('nextPage');
-        const goBackButton = document.getElementById('goBack');
         const fontSizeSlider = document.getElementById('fontSizeSlider');
         const fontSizeValue = document.getElementById('fontSizeValue');
         const themeSelect = document.getElementById('themeSelect');
@@ -83,61 +89,56 @@
 
         let book;
         let rendition;
-        let currentFontSize = 16; // Default font size
         let currentPage = 1;
         let totalPages = 1;
 
-        // Handle EPUB file selection
-        fileInput.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
+        // Auto-load epub.epub
+        window.addEventListener('DOMContentLoaded', () => {
+            book = ePub('epub.epub');
+            rendition = book.renderTo('viewer', {
+                width: '100vw',
+                height: '90vh'
+            });
 
-                reader.onload = function (e) {
-                    const arrayBuffer = e.target.result;
-
-                    // Load the EPUB file
-                    book = ePub(arrayBuffer);
-                    // Variables for swipe gesture
-                    let touchStartX = 0;
-                    let touchEndX = 0;
-
-                    // Create a rendition and render the book
-                    rendition = book.renderTo('viewer', {
-                        width: '100%',
-                        height: '100%'
-                    });
-
-                    // Display the first page and calculate total pages
-                    rendition.display();
-                    book.ready.then(() => {
-                        book.locations.generate().then(() => {
-                            const spineItems = book.spine.items;
-                            totalPages = spineItems.length;
-                            updatePageInfo(currentPage, totalPages);
-                            pageInfo.style.display = 'block';
-                        });
-                    });
-
-                    // Update current page on navigation
-                    rendition.on('relocated', (location) => {
-                        const spineIndex = location.start.index;
-                        currentPage = spineIndex + 1; // Pages start at index 0
-                        updatePageInfo(currentPage, totalPages);
-                    });
-
-                    // Set default font size
-                    rendition.themes.fontSize(`${currentFontSize}px`);
-
-                    // Show controls and hide file input
-                    controls.style.display = 'flex';
-                    fileInputContainer.style.display = 'none';
-                            // Add swipe gesture support
-                            addSwipeGestures();
-                };
-
-                reader.readAsArrayBuffer(file);
+            const themes = {
+            day: {
+                body: { background: "#ffffff", color: "#000000" }
+            },
+            night: {
+                body: { background: "#1c1c1c", color: "#ffffff" }
+            },
+            sepia: {
+                body: { background: "#f5deb3", color: "#5b4636" }
             }
+        };
+
+        rendition.themes.fontSize(`${fontSizeValue}px`);
+                    rendition.themes.register('day', themes.day);
+                    rendition.themes.register('night', themes.night);
+                    rendition.themes.register('sepia', themes.sepia);
+                    rendition.themes.select('night');
+
+            // Display the first page and calculate total pages
+            rendition.display();
+            book.ready.then(() => {
+                book.locations.generate().then(() => {
+                    const spineItems = book.spine.items;
+                    totalPages = spineItems.length;
+                    updatePageInfo(currentPage, totalPages);
+                    pageInfo.style.display = 'block';
+                });
+            });
+
+            // Update current page on navigation
+            rendition.on('relocated', (location) => {
+                const spineIndex = location.start.index;
+                currentPage = spineIndex + 1; // Pages start at index 0
+                updatePageInfo(currentPage, totalPages);
+            });
+
+            // Add swipe gestures and side click functionality
+            addSwipeGestures();
+            addSideClicks();
         });
 
         // Navigate to the previous page
@@ -154,49 +155,20 @@
             }
         });
 
-        // Go back to the file selection
-        goBackButton.addEventListener('click', () => {
-            if (rendition) {
-                rendition.destroy();
-            }
-            controls.style.display = 'none';
-            fileInputContainer.style.display = 'block';
-            viewer.innerHTML = '';
-            pageInfo.style.display = 'none';
-            currentPage = 1;
-            totalPages = 1;
-        });
-
         // Update font size when slider changes
         fontSizeSlider.addEventListener('input', (event) => {
-            currentFontSize = event.target.value;
-            fontSizeValue.textContent = `${currentFontSize}px`;
+            const fontSize = event.target.value;
+            fontSizeValue.textContent = `${fontSize}px`;
             if (rendition) {
-                rendition.themes.fontSize(`${currentFontSize}px`);
+                rendition.themes.fontSize(`${fontSize}px`);
             }
         });
 
-
-        // Add global keyboard support
-        document.addEventListener('keydown', (event) => {
-            // Always blur active elements if not viewer
-            if (['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName)) {
-                event.target.blur();
-            }
-
+        // Change theme dynamically
+        themeSelect.addEventListener('change', (event) => {
+            const selectedTheme = event.target.value;
             if (rendition) {
-                switch (event.key) {
-                    case 'ArrowRight': // Next page
-                    case ' ':
-                    case 'Enter':
-                        rendition.next();
-                        break;
-                    case 'ArrowLeft': // Previous page
-                        rendition.prev();
-                        break;
-                    default:
-                        break;
-                }
+                rendition.themes.select(selectedTheme);
             }
         });
 
@@ -207,38 +179,49 @@
 
         // Add swipe gesture support
         function addSwipeGestures() {
+            let touchStartX = 0;
+            let touchEndX = 0;
+
             viewer.addEventListener('touchstart', (event) => {
                 touchStartX = event.touches[0].clientX;
             });
 
-            viewer.addEventListener('touchmove', (event) => {
-                touchEndX = event.touches[0].clientX;
-            });
-
-            viewer.addEventListener('touchend', () => {
+            viewer.addEventListener('touchend', (event) => {
+                touchEndX = event.changedTouches[0].clientX;
                 handleSwipe();
             });
-        }
 
-        // Handle swipe gesture to change pages
-        function handleSwipe() {
-            const swipeThreshold = 10; // Minimum swipe distance in pixels
-            const swipeDistance = touchStartX - touchEndX;
+            function handleSwipe() {
+                const swipeThreshold = 30; // Minimum swipe distance in pixels
+                const swipeDistance = touchStartX - touchEndX;
 
-            if (swipeDistance > swipeThreshold) {
-                // Swipe left: Next page
-                if (rendition) {
-                    rendition.next();
-                }
-            } else if (swipeDistance < -swipeThreshold) {
-                // Swipe right: Previous page
-                if (rendition) {
-                    rendition.prev();
-
+                if (Math.abs(swipeDistance) > swipeThreshold) {
+                    if (swipeDistance > 0) {
+                        rendition.next(); // Swipe left: Next page
+                    } else {
+                        rendition.prev(); // Swipe right: Previous page
+                    }
                 }
             }
         }
 
+        // Add side click functionality
+        function addSideClicks() {
+            const leftRegion = viewer.querySelector('.click-region.left');
+            const rightRegion = viewer.querySelector('.click-region.right');
+
+            leftRegion.addEventListener('click', () => {
+                if (rendition && currentPage > 1) {
+                    rendition.prev();
+                }
+            });
+
+            rightRegion.addEventListener('click', () => {
+                if (rendition && currentPage < totalPages) {
+                    rendition.next();
+                }
+            });
+        }
     </script>
 
 </body>
