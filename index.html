@@ -58,7 +58,9 @@
     </style>
 </head>
 <body>
-
+    <div id="fileInputContainer">
+        <input type="file" id="fileInput" accept=".epub" />
+    </div>
     <div id="controls">
         <button id="prevPage"><</button>
         <button id="nextPage">></button>
@@ -72,6 +74,12 @@
         <input type="range" id="fontSizeSlider" min="12" max="60" value="26">
         <span id="fontSizeValue">26px</span>
     </div>
+    <div id="logo">
+        <svg width="300px" viewBox="-10 -5 1034 1034" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1">
+            <path fill="#000000"
+         d="M500 227q-19 0 -32 13l-355 354q-13 14 -13 33t13 32l355 354q13 14 32 14t32 -14l355 -354q13 -13 13 -32t-13 -33l-52 -51l-335 335l-251 -251l251 -252l84 84l-168 168l84 83l251 -251l-219 -219q-13 -13 -32 -13z" />
+         </svg>
+    </div>
     <div id="viewer" tabindex="0">
        <div class="click-region left"></div>
         <div class="click-region right"></div>
@@ -79,7 +87,9 @@
     <div id="pageInfo" style="display: none;">עמוד 1 / 1</div>
 
     <script>
-        const viewer = document.getElementById('viewer');
+        const fileInput = document.getElementById('fileInput');
+        const fileInputContainer = document.getElementById('fileInputContainer');
+         const viewer = document.getElementById('viewer');
         const prevPageButton = document.getElementById('prevPage');
         const nextPageButton = document.getElementById('nextPage');
         const fontSizeSlider = document.getElementById('fontSizeSlider');
@@ -93,12 +103,14 @@
         let totalPages = 1;
 
         // Auto-load epub.epub
+        
         window.addEventListener('DOMContentLoaded', () => {
             book = ePub('epub.epub');
             rendition = book.renderTo('viewer', {
                 width: '100vw',
                 height: '90vh'
             });
+            
 
             const themes = {
             day: {
