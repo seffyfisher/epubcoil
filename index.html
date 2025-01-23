@@ -161,7 +161,7 @@
             book = ePub('hebrew.epub');
             rendition = book.renderTo('viewer', {
                 width: '100vw',
-                height: '90vh',
+                height: 'calc(100vh - 160px)',
             });
             rendition.spread("none");
             
