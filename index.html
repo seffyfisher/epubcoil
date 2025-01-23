@@ -1,13 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="he">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EPUB.js Reader</title>
+    <title>epub.co.il</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js"></script>
     <style>
         html {
+            direction: rtl;
             font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
             margin: 0;
             padding: 0;
@@ -17,12 +18,23 @@
         body {
             margin: 0;
             padding: 0;
+            margin-top: 10px;
+            background-color: black;
         }
+    #logo{
+        margin: 0 auto;
+        text-align: center;
+        transition: transform 0.25s ease-in-out;
+        fill: #fff;
+    }
+    #logo:hover{
+        transform: translate(0,10px) scale(1.4);
+    }
         #viewer {
             width: 100%;
             height: 100%;
-            overflow: hidden;
-            position: relative;
+            max-width: 800px;
+
         }
         #viewer .click-region {
             position: absolute;
@@ -31,11 +43,11 @@
             width: 50%;
             z-index: 10;
         }
-        #viewer .click-region.left {
+        #viewer .click-region.right {
             left: 0;
             width: 10vw;
         }
-        #viewer .click-region.right {
+        #viewer .click-region.left {
             right: 0;
             width: 10vw;
         }
@@ -43,6 +55,12 @@
             display: flex;
             gap: 4px;
             align-items: center;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto;
+            text-align: center;
+            color: white;
+            font-size: 14px;
         }
         #pageInfo {
             position: absolute;
@@ -55,28 +73,48 @@
             padding: 5px 10px;
             border-radius: 5px;
         }
+        button{cursor: pointer;}
+        button.controlBtn{
+    display: inline-block;
+    background: linear-gradient(135deg, #6a11cb, #2575fc); /* Modern gradient */
+    color: #fff;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 12px 24px;
+    margin: 0 10px;
+    border: none;
+    border-radius: 25px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    outline: none;
+        }
+        #fontSizeSlider{
+            width: 70px;
+        }
     </style>
 </head>
 <body>
-    <div id="fileInputContainer">
+    <!--<div id="fileInputContainer">
         <input type="file" id="fileInput" accept=".epub" />
-    </div>
+    </div>!-->
     <div id="controls">
-        <button id="prevPage"><</button>
-        <button id="nextPage">></button>
-        <label for="themeSelect">Theme:</label>
+        <button id="prevPage" class="controlBtn"><</button>
+        <label for="themeSelect">ערכת נושא:</label>
         <select id="themeSelect">
-            <option value="day">Day</option>
-            <option value="night">Night</option>
-            <option value="sepia">Sepia</option>
+            <option value="day">יום</option>
+            <option value="night">לילה</option>
+            <option value="sepia">ספיה</option>
         </select>
-        <label for="fontSizeSlider"> Size:</label>
-        <input type="range" id="fontSizeSlider" min="12" max="60" value="26">
-        <span id="fontSizeValue">26px</span>
+        <label for="fontSizeSlider"> גודל:</label>
+        <input type="range" id="fontSizeSlider" min="12" max="60" value="35">
+        <span id="fontSizeValue">35px</span>
+        <button id="nextPage" class="controlBtn">></button>
+
     </div>
     <div id="logo">
-        <svg width="300px" viewBox="-10 -5 1034 1034" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1">
-            <path fill="#000000"
+        <svg width="40px" viewBox="-10 -5 1034 1034" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1">
+            <path
          d="M500 227q-19 0 -32 13l-355 354q-13 14 -13 33t13 32l355 354q13 14 32 14t32 -14l355 -354q13 -13 13 -32t-13 -33l-52 -51l-335 335l-251 -251l251 -252l84 84l-168 168l84 83l251 -251l-219 -219q-13 -13 -32 -13z" />
          </svg>
     </div>
@@ -94,8 +132,11 @@
         const nextPageButton = document.getElementById('nextPage');
         const fontSizeSlider = document.getElementById('fontSizeSlider');
         const fontSizeValue = document.getElementById('fontSizeValue');
+        const fontSizeValueDefualt = document.getElementById('fontSizeValue').textContent;
         const themeSelect = document.getElementById('themeSelect');
         const pageInfo = document.getElementById('pageInfo');
+        const controls = document.getElementById('controls');
+        const logo = document.getElementById('logo');
 
         let book;
         let rendition;
@@ -103,13 +144,27 @@
         let totalPages = 1;
 
         // Auto-load epub.epub
+
+        controls.style.display = 'none';
+
+        logo.addEventListener('click', () => {
+    if (controls.style.display === "none") {
+        controls.style.display = "block";
+    } 
+    else {
+        controls.style.display = "none";
+    }
+});
+
         
         window.addEventListener('DOMContentLoaded', () => {
-            book = ePub('epub.epub');
+            book = ePub('hebrew.epub');
             rendition = book.renderTo('viewer', {
                 width: '100vw',
-                height: '90vh'
+                height: '90vh',
             });
+            rendition.spread("none");
+            
             
 
             const themes = {
@@ -124,7 +179,7 @@
             }
         };
 
-        rendition.themes.fontSize(`${fontSizeValue}px`);
+        rendition.themes.fontSize(`${fontSizeValueDefualt}`);
                     rendition.themes.register('day', themes.day);
                     rendition.themes.register('night', themes.night);
                     rendition.themes.register('sepia', themes.sepia);
@@ -132,6 +187,7 @@
 
             // Display the first page and calculate total pages
             rendition.display();
+
             book.ready.then(() => {
                 book.locations.generate().then(() => {
                     const spineItems = book.spine.items;
@@ -186,7 +242,7 @@
 
         // Update page info display
         function updatePageInfo(currentPage, totalPages) {
-            pageInfo.textContent = `Page ${currentPage} / ${totalPages}`;
+            pageInfo.textContent = `עמוד ${currentPage} / ${totalPages}`;
         }
 
         // Add swipe gesture support
@@ -234,6 +290,21 @@
                 }
             });
         }
+
+        // Add keyboard navigation support
+window.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowLeft') {
+        // Navigate to the next page
+        if (rendition && currentPage < totalPages) {
+            rendition.next();
+        }
+    } else if (event.key === 'ArrowRight') {
+        // Navigate to the previous page
+        if (rendition && currentPage > 1) {
+            rendition.prev();
+        }
+    }
+});
     </script>
 
 </body>
