@@ -78,10 +78,9 @@
     display: inline-block;
     background: linear-gradient(135deg, #6a11cb, #2575fc); /* Modern gradient */
     color: #fff;
-    font-size: 16px;
+    font-size: 13px;
     font-weight: bold;
-    padding: 12px 24px;
-    margin: 0 10px;
+    padding: 10px 6px;
     border: none;
     border-radius: 25px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -103,7 +102,7 @@
         <label for="themeSelect">ערכת נושא:</label>
         <select id="themeSelect">
             <option value="day">יום</option>
-            <option value="night">לילה</option>
+            <option value="night" selected>לילה</option>
             <option value="sepia">ספיה</option>
         </select>
         <label for="fontSizeSlider"> גודל:</label>
@@ -234,10 +233,11 @@
 
         // Change theme dynamically
         themeSelect.addEventListener('change', (event) => {
-            const selectedTheme = event.target.value;
+            const selectedTheme = themeSelect.value;
             if (rendition) {
                 rendition.themes.select(selectedTheme);
             }
+
         });
 
         // Update page info display
