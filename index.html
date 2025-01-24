@@ -312,12 +312,12 @@
                 const swipeDistance = touchStartX - touchEndX;
 
                 if (swipeDistance > swipeThreshold) {
-                    if (swipeDistance > 0) {
+                    if (swipeDistance < 0) {
                         console.log('Swipe left');
-                        rendition.next(); // Swipe left: Next page
+                        rendition.prev(); // Swipe left: Next page
                     } else {
                         console.log('Swipe right');
-                        rendition.prev(); // Swipe right: Previous page
+                        rendition.next(); // Swipe right: Previous page
                     }
                 }
             }
