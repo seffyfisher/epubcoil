@@ -167,45 +167,45 @@
             });
             rendition.spread("none");
             
-            book.loaded.navigation.then(function(toc){
-         const $select = document.getElementById("toc"),
-          docfrag = document.createDocumentFragment();
+    //         book.loaded.navigation.then(function(toc){
+    //      const $select = document.getElementById("toc"),
+    //       docfrag = document.createDocumentFragment();
 
-      toc.forEach(function(chapter) {
-        var option = document.createElement("option");
-        option.textContent = chapter.label;
-        option.ref = chapter.href;
-        docfrag.appendChild(option);
-      });
+    //   toc.forEach(function(chapter) {
+    //     var option = document.createElement("option");
+    //     option.textContent = chapter.label;
+    //     option.ref = chapter.href;
+    //     docfrag.appendChild(option);
+    //   });
 
-      $select.appendChild(docfrag);
+    //   $select.appendChild(docfrag);
 
-      $select.onchange = function(){
-          var index = $select.selectedIndex,
-              url = $select.options[index].ref;
-              console.log(url)
-          display(url);
-          return false;
-      };
+    //   $select.onchange = function(){
+    //       var index = $select.selectedIndex,
+    //           url = $select.options[index].ref;
+    //           console.log(url)
+    //       display(url);
+    //       return false;
+    //   };
 
-      book.opened.then(function(){
-        display(currentSectionIndex);
-      });
+    //   book.opened.then(function(){
+    //     display(currentSectionIndex);
+    //   });
 
 
-      function display(item){
-        var section = book.spine.get(item);
-        if(section) {
-          currentSection = section;
-          section.render().then(function(html){
-            // viewer.srcdoc = html;
-            viewer.innerHTML = html;
-          });
-        }
-        return section;
-      }
+    //   function display(item){
+    //     var section = book.spine.get(item);
+    //     if(section) {
+    //       currentSection = section;
+    //       section.render().then(function(html){
+    //         // viewer.srcdoc = html;
+    //         viewer.innerHTML = html;
+    //       });
+    //     }
+    //     return section;
+    //   }
 
-    });
+    // });
 
             
             
