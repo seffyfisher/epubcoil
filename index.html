@@ -53,6 +53,7 @@
         }
         #controls {
             display: flex;
+            flex-wrap: wrap;
             gap: 4px;
             align-items: center;
             justify-content: center;
@@ -109,7 +110,7 @@
         <input type="range" id="fontSizeSlider" min="12" max="60" value="35">
         <span id="fontSizeValue">35px</span>
         <button id="nextPage" class="controlBtn">></button>
-
+        <select id="toc"></select>
     </div>
     <div id="logo">
         <svg width="40px" viewBox="-10 -5 1034 1034" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1">
@@ -141,6 +142,8 @@
         let rendition;
         let currentPage = 1;
         let totalPages = 1;
+        var currentSection;
+        var currentSectionIndex = 1;
 
         // Auto-load epub.epub
 
@@ -163,6 +166,47 @@
                 height: 'calc(100vh - 160px)',
             });
             rendition.spread("none");
+            
+            book.loaded.navigation.then(function(toc){
+         const $select = document.getElementById("toc"),
+          docfrag = document.createDocumentFragment();
+
+      toc.forEach(function(chapter) {
+        var option = document.createElement("option");
+        option.textContent = chapter.label;
+        option.ref = chapter.href;
+        docfrag.appendChild(option);
+      });
+
+      $select.appendChild(docfrag);
+
+      $select.onchange = function(){
+          var index = $select.selectedIndex,
+              url = $select.options[index].ref;
+              console.log(url)
+          display(url);
+          return false;
+      };
+
+      book.opened.then(function(){
+        display(currentSectionIndex);
+      });
+
+
+      function display(item){
+        var section = book.spine.get(item);
+        if(section) {
+          currentSection = section;
+          section.render().then(function(html){
+            // viewer.srcdoc = html;
+            viewer.innerHTML = html;
+          });
+        }
+        return section;
+      }
+
+    });
+
             
             
 
@@ -208,6 +252,9 @@
             addSideClicks();
         });
 
+
+        
+
         // Navigate to the previous page
         prevPageButton.addEventListener('click', () => {
             if (rendition && currentPage > 1) {
@@ -245,29 +292,32 @@
             pageInfo.textContent = `עמוד ${currentPage} / ${totalPages}`;
         }
 
+
         // Add swipe gesture support
         function addSwipeGestures() {
             let touchStartX = 0;
             let touchEndX = 0;
 
-            viewer.addEventListener('touchstart', (event) => {
+            document.addEventListener('touchstart', (event) => {
                 touchStartX = event.touches[0].clientX;
             });
 
-            viewer.addEventListener('touchend', (event) => {
+            document.addEventListener('touchend', (event) => {
                 touchEndX = event.changedTouches[0].clientX;
                 handleSwipe();
             });
 
             function handleSwipe() {
-                const swipeThreshold = 30; // Minimum swipe distance in pixels
+                const swipeThreshold = 3; // Minimum swipe distance in pixels
                 const swipeDistance = touchStartX - touchEndX;
 
                 if (Math.abs(swipeDistance) > swipeThreshold) {
                     if (swipeDistance > 0) {
-                        rendition.next(); // Swipe left: Next page
+                        console.log('Swipe left');
+                        rendition.prev(); // Swipe left: Next page
                     } else {
-                        rendition.prev(); // Swipe right: Previous page
+                        console.log('Swipe right');
+                        rendition.next(); // Swipe right: Previous page
                     }
                 }
             }
