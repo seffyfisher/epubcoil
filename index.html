@@ -311,7 +311,7 @@
                 const swipeThreshold = 3; // Minimum swipe distance in pixels
                 const swipeDistance = touchStartX - touchEndX;
 
-                if (Math.abs(swipeDistance) > swipeThreshold) {
+                if (swipeDistance > swipeThreshold) {
                     if (swipeDistance > 0) {
                         console.log('Swipe left');
                         rendition.prev(); // Swipe left: Next page
