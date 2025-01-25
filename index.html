@@ -298,11 +298,11 @@
             let touchStartX = 0;
             let touchEndX = 0;
 
-            document.addEventListener('touchstart', (event) => {
+            viewer.addEventListener('touchstart', (event) => {
                 touchStartX = event.touches[0].clientX;
             });
 
-            document.addEventListener('touchend', (event) => {
+            viewer.addEventListener('touchend', (event) => {
                 touchEndX = event.changedTouches[0].clientX;
                 handleSwipe();
             });
@@ -310,16 +310,18 @@
             function handleSwipe() {
                 const swipeThreshold = 3; // Minimum swipe distance in pixels
                 const swipeDistance = touchStartX - touchEndX;
+                console.log(swipeDistance);
+                console.log(touchStartX,touchEndX)
 
-                if (swipeDistance > swipeThreshold) {
-                    if (swipeDistance < 0) {
+
+                    if (swipeDistance > 0) {
                         console.log('Swipe left');
                         rendition.prev(); // Swipe left: Next page
                     } else {
                         console.log('Swipe right');
                         rendition.next(); // Swipe right: Previous page
                     }
-                }
+                
             }
         }
 
