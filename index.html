@@ -15,9 +15,11 @@
       --panel: rgba(24, 24, 27, 0.96);
       --border: rgba(255,255,255,0.1);
       --accent: #7c5cff;
+      --control-bg: #27272a;
+      --control-fg: #f4f4f5;
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
-      --chrome: 52px;
+      --chrome: 56px;
     }
     * { box-sizing: border-box; }
     html, body {
@@ -28,21 +30,26 @@
     }
     #app { height: 100%; display: flex; flex-direction: column; position: relative; }
     #topbar {
-      height: calc(var(--chrome) + var(--safe-top));
-      padding: var(--safe-top) 12px 0;
+      flex: 0 0 auto;
+      min-height: calc(var(--chrome) + var(--safe-top));
+      padding: calc(8px + var(--safe-top)) 12px 8px;
       display: flex; align-items: center; justify-content: space-between; gap: 8px;
-      z-index: 30; background: linear-gradient(to bottom, rgba(0,0,0,.55), transparent);
-      position: absolute; inset-inline: 0; top: 0; pointer-events: none;
+      z-index: 60; position: relative;
+      background: color-mix(in srgb, var(--bg) 88%, transparent);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(10px);
     }
-    #topbar > * { pointer-events: auto; }
     .icon-btn {
-      width: 42px; height: 42px; border-radius: 999px; border: 1px solid var(--border);
-      background: rgba(0,0,0,.35); color: var(--fg); display: grid; place-items: center;
+      width: 44px; height: 44px; min-width: 44px; min-height: 44px;
+      border-radius: 999px; border: 1px solid var(--border);
+      background: color-mix(in srgb, var(--bg) 70%, #000 30%); color: var(--fg);
+      display: grid; place-items: center;
       cursor: pointer; backdrop-filter: blur(8px);
     }
     .icon-btn svg { width: 22px; height: 22px; fill: currentColor; }
     #progressWrap {
-      flex: 1; max-width: 46vw; height: 6px; border-radius: 999px; background: rgba(255,255,255,.12);
+      flex: 1; max-width: 46vw; height: 6px; border-radius: 999px;
+      background: color-mix(in srgb, var(--fg) 18%, transparent);
       overflow: hidden; align-self: center;
     }
     #progressBar { height: 100%; width: 0%; background: var(--accent); transition: width .2s ease; }
@@ -55,8 +62,8 @@
     .tap-zone {
       position: absolute; top: 0; bottom: 0; width: 18%; z-index: 5;
     }
-    .tap-zone.prev { inset-inline-end: 0; }
-    .tap-zone.next { inset-inline-start: 0; }
+    .tap-zone.next { left: 0; right: auto; }   /* physical left = Next (RTL + ArrowLeft) */
+    .tap-zone.prev { right: 0; left: auto; }  /* physical right = Prev */
     #status {
       position: absolute; inset: 0; display: grid; place-items: center; z-index: 20;
       background: var(--bg); color: var(--muted); font-size: 15px; padding: 24px; text-align: center;
@@ -84,18 +91,20 @@
     select, input[type="range"], input[type="file"] {
       flex: 1; min-width: 0; accent-color: var(--accent);
     }
-    select {
-      background: #18181b; color: var(--fg); border: 1px solid var(--border);
+    select, input[type="file"] {
+      background: var(--control-bg); color: var(--control-fg); border: 1px solid var(--border);
       border-radius: 10px; padding: 10px 12px; font-size: 14px;
     }
+    select option { background: var(--control-bg); color: var(--control-fg); }
     .nav-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px; }
     .nav-row button {
-      border: 0; border-radius: 12px; padding: 12px 10px; font-weight: 600; font-size: 15px;
+      border: 0; border-radius: 12px; padding: 14px 12px; min-height: 48px; font-weight: 600; font-size: 15px;
       background: linear-gradient(135deg, #6a11cb, #2575fc); color: #fff; cursor: pointer;
     }
     #fontVal { font-size: 13px; color: var(--muted); min-width: 3em; }
-    body.theme-day { --bg: #f7f7f5; --fg: #111; --muted: #666; --panel: rgba(255,255,255,.97); --border: rgba(0,0,0,.1); --accent: #4f46e5; }
-    body.theme-sepia { --bg: #f3e7d3; --fg: #4a3728; --muted: #7a5c45; --panel: rgba(250,240,220,.97); --border: rgba(90,60,30,.15); --accent: #a16207; }
+    body.theme-day { --bg: #f7f7f5; --fg: #111; --muted: #666; --panel: rgba(255,255,255,.97); --border: rgba(0,0,0,.1); --accent: #4f46e5; --control-bg: #ffffff; --control-fg: #111111; }
+    body.theme-sepia { --bg: #f3e7d3; --fg: #4a3728; --muted: #7a5c45; --panel: rgba(250,240,220,.97); --border: rgba(90,60,30,.15); --accent: #a16207; --control-bg: #faf0dc; --control-fg: #4a3728; }
+    body.theme-night { --control-bg: #27272a; --control-fg: #f4f4f5; }
   </style>
 </head>
 <body class="theme-night">
