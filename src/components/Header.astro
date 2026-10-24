@@ -1,0 +1,54 @@
+---
+import ThemeToggle from "./ThemeToggle.astro";
+import { sections } from "../lib/sections";
+const path = Astro.url.pathname;
+---
+
+<header class="masthead">
+  <div class="shell masthead-top">
+    <a class="brand" href="/" aria-label="epub.co.il, דף הבית"
+      ><bdi dir="ltr">epub.co.il</bdi><span>ידע עברי על ספרים דיגיטליים</span
+      ></a
+    >
+    <nav class="primary-nav" aria-label="ניווט ראשי">
+      <details class="sections-menu">
+        <summary>מדורים</summary>
+        <div class="menu-panel">
+          <p class="menu-label">כל המדורים</p>{
+            sections.map((section) => (
+              <a
+                href={`/${section.key}/`}
+                aria-current={
+                  path.startsWith(`/${section.key}/`) ? "page" : undefined
+                }
+              >
+                {section.title}
+              </a>
+            ))
+          }
+        </div>
+      </details>
+      <a
+        href="/glossary/"
+        aria-current={path.startsWith("/glossary/") ? "page" : undefined}
+        >מילון</a
+      >
+      <a
+        href="/resources/"
+        aria-current={path.startsWith("/resources/") ? "page" : undefined}
+        >משאבים</a
+      >
+      <a
+        href="/tools/"
+        aria-current={path.startsWith("/tools/") ? "page" : undefined}>כלים</a
+      >
+      <a
+        class="search-link"
+        href="/search/"
+        aria-current={path.startsWith("/search/") ? "page" : undefined}
+        ><span aria-hidden="true">⌕</span><span>חיפוש</span></a
+      >
+      <ThemeToggle />
+    </nav>
+  </div>
+</header>

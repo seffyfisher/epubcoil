@@ -1,0 +1,33 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+const pages = [
+  ["links", "קישורים", "תקנים, מפרטים וקהילות"],
+  ["software", "תוכנות", "כלים לכתיבה, המרה ובדיקה"],
+  ["experiments", "ניסויים", "פרויקטים שכדאי לפתוח וללמוד מהם"],
+  ["leaders", "דמויות וארגונים", "אנשים וארגונים פעילים בתחום"],
+  ["providers", "ספקי שירות", "רישום מידע ניטרלי של נותני שירות"],
+] as const;
+---
+
+<BaseLayout
+  title="משאבים | epub.co.il"
+  description="קישורים, תוכנות ומשאבים לעבודה עם ספרים דיגיטליים."
+  ><section class="page-head" data-pagefind-body>
+    <p class="kicker">משאבים</p><h1>מקורות שימושיים</h1><p class="lede">
+      דפי עזר שנבדקו, מסודרים לפי סוג השימוש ולא לפי דירוג.
+    </p>
+  </section><ol class="entry-list">
+    {
+      pages.map(([slug, title, description]) => (
+        <li>
+          <>
+            <h2>
+              <a href={`/resources/${slug}/`}>{title}</a>
+            </h2>
+            <p>{description}</p>
+          </>
+        </li>
+      ))
+    }
+  </ol></BaseLayout
+>

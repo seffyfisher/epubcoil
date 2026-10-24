@@ -1,0 +1,46 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { articlePath } from "../lib/links";
+const articles = await getCollection("articles", ({ data }) => !data.draft);
+const graph = [
+  {
+    "@type": "FAQPage",
+    mainEntity: articles.flatMap((article) =>
+      (article.data.faq ?? []).map((item) => ({
+        "@type": "Question",
+        name: item.q,
+        acceptedAnswer: { "@type": "Answer", text: item.a },
+      })),
+    ),
+  },
+];
+---
+
+<BaseLayout
+  title="שאלות נפוצות | epub.co.il"
+  description="שאלות ותשובות על EPUB וספרים דיגיטליים."
+  jsonld={graph}
+  ><section class="page-head">
+    <p class="kicker">שאלות נפוצות</p><h1>שאלות נפוצות</h1>
+  </section><section class="faq prose" data-pagefind-body>
+    {
+      articles.map((article) =>
+        article.data.faq?.length ? (
+          <section>
+            <h2>
+              <a href={articlePath(article)}>{article.data.title}</a>
+            </h2>
+            {article.data.faq.map((item) => (
+              <details>
+                <summary>{item.q}</summary>
+                <p>{item.a}</p>
+                <a href={articlePath(article)}>למאמר המלא</a>
+              </details>
+            ))}
+          </section>
+        ) : null,
+      )
+    }
+  </section></BaseLayout
+>

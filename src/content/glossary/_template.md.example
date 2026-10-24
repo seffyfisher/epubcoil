@@ -1,0 +1,19 @@
+---
+# העתיקו אל src/content/glossary/<slug>.md (slug באנגלית, למשל opf)
+term: "מסמך החבילה (OPF)"
+termEn: "Package Document (OPF)"
+short: "הגדרה במשפט אחד."
+related:
+  - basics/epub-file-structure # מאמרים (section/slug) או מונחים (glossary/slug)
+  - glossary/spine
+sources:
+  - title: "EPUB 3.3 — Package document"
+    url: "https://www.w3.org/TR/epub-33/#sec-package-doc"
+updated: 2026-10-24
+---
+
+הסבר מורחב בכמה פסקאות. מתי נתקלים במונח, למה הוא חשוב, דוגמה קצרה.
+
+```xml
+<package version="3.0" ...>
+```

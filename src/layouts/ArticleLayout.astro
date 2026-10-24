@@ -1,0 +1,59 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+import { formatHebrewDate, isoDate } from "../lib/dates";
+import { sectionMap } from "../lib/sections";
+import { articleGraph } from "../lib/jsonld";
+import AnswerBox from "../components/AnswerBox.astro";
+import Breadcrumbs from "../components/Breadcrumbs.astro";
+import FaqList from "../components/FaqList.astro";
+import PrevNext from "../components/PrevNext.astro";
+import RelatedList from "../components/RelatedList.astro";
+import SourcesList from "../components/SourcesList.astro";
+import Toc from "../components/Toc.astro";
+
+const { entry, Content, previous, next, related = [] } = Astro.props;
+const data = entry.data;
+const minutes = Math.max(
+  1,
+  Math.ceil(
+    (entry.body ?? "").replace(/---[\s\S]*?---/, "").split(/\s+/).length / 220,
+  ),
+);
+const { headings = [] } = Astro.props;
+---
+
+<BaseLayout
+  title={`${data.title} | epub.co.il`}
+  description={data.description}
+  jsonld={articleGraph(entry)}
+  type="article"
+  modified={data.updated}
+>
+  <article class="article" data-pagefind-body>
+    <Breadcrumbs
+      section={data.section}
+      sectionTitle={sectionMap[data.section]}
+    />
+    <header class="article-header">
+      <p class="kicker">{sectionMap[data.section]}</p>
+      <h1>{data.title}</h1>
+      <p class="dek">{data.description}</p>
+      <p class="meta-line">
+        עודכן לאחרונה <time datetime={isoDate(data.updated)}
+          >{formatHebrewDate(data.updated)}</time
+        ><span>·</span>{minutes} דקות קריאה
+      </p>
+    </header>
+    <div class="article-grid">
+      <Toc {headings} hasFaq={Boolean(data.faq?.length)} />
+      <div class="article-main">
+        <AnswerBox answer={data.answer} />
+        <div id="article-body" class="prose"><Content /></div>
+        {data.faq?.length && <FaqList items={data.faq} />}
+        <SourcesList sources={data.sources} />
+        {related.length > 0 && <RelatedList items={related} />}
+        <PrevNext {previous} {next} />
+      </div>
+    </div>
+  </article>
+</BaseLayout>

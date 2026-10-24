@@ -1,0 +1,14 @@
+---
+interface Props {
+  section: string;
+  sectionTitle: string;
+}
+
+const { section, sectionTitle } = Astro.props;
+---
+
+<nav class="breadcrumbs" aria-label="פירורי לחם">
+  <a href="/">בית</a>
+  <span>/</span>
+  <a href={`/${section}/`}>{sectionTitle}</a>
+</nav>

@@ -1,0 +1,144 @@
+- id: sigil
+  name: Sigil
+  url: https://sigil-ebook.com/
+  description: עורך EPUB חזותי וקוד פתוח לעריכה ובנייה של ספרים אלקטרוניים.
+  category: authoring
+  platforms: [windows, mac, linux]
+  pricing: free
+  openSource: true
+  checked: 2026-10-24
+- id: calibre
+  name: Calibre
+  url: https://calibre-ebook.com/
+  description: תוכנה חינמית לניהול ספרים אלקטרוניים, המרות וקריאה.
+  category: conversion
+  platforms: [windows, mac, linux]
+  pricing: free
+  openSource: true
+  checked: 2026-10-24
+- id: thorium-reader
+  name: Thorium Reader
+  url: https://www.edrlab.org/software/thorium-reader/
+  description: יישום קריאה חינמי ל־EPUB ולפורמטים נגישים נוספים מבית EDRLab.
+  category: reading
+  platforms: [windows, mac, linux]
+  pricing: free
+  openSource: true
+  checked: 2026-10-24
+- id: epubcheck
+  name: EPUBCheck
+  url: https://www.w3.org/publishing/epubcheck/
+  description: מאמת רשמי של EPUB לאיתור שגיאות תאימות במבנה הקובץ.
+  category: validation
+  platforms: [windows, mac, linux]
+  pricing: free
+  openSource: true
+  checked: 2026-10-24
+- id: ace-by-daisy
+  name: Ace by DAISY
+  url: https://daisy.github.io/ace/
+  description: כלי לבדיקת נגישות של קובצי EPUB ולהפקת דוח ממצאים.
+  category: accessibility
+  platforms: [windows, mac, linux]
+  pricing: free
+  openSource: true
+  checked: 2026-10-24
+- id: pagina-epub-checker
+  name: Pagina EPUB-Checker
+  url: https://pagina.gmbh/startseite/leistungen/publishing-softwareloesungen/epub-checker/
+  description: כלי מסחרי לבדיקת קובצי EPUB המוצע על ידי pagina GmbH.
+  category: validation
+  platforms: [windows]
+  pricing: paid
+  openSource: false
+  checked: 2026-10-24
+- id: vivliostyle
+  name: Vivliostyle
+  url: https://vivliostyle.org/
+  description: סביבת טיפוגרפיה ופריסה מבוססת CSS לפרסום דיגיטלי ומודפס.
+  category: authoring
+  platforms: [web]
+  pricing: free
+  openSource: true
+  checked: 2026-10-24
+- id: readium
+  name: Readium
+  url: https://readium.org/
+  description: מיזם קוד פתוח שמפתח ספריות ותשתיות למערכות קריאה של EPUB.
+  category: libraries
+  platforms: [web, windows, mac, linux, ios, android]
+  pricing: free
+  openSource: true
+  checked: 2026-10-24
+- id: epub-js
+  name: epub.js
+  url: https://github.com/futurepress/epub.js
+  description: ספריית JavaScript להצגת ספרי EPUB בדפדפן.
+  category: libraries
+  platforms: [web]
+  pricing: free
+  openSource: true
+  checked: 2026-10-24
+- id: pandoc
+  name: Pandoc
+  url: https://pandoc.org/
+  description: ממיר מסמכים חינמי בין פורמטים רבים, כולל EPUB.
+  category: conversion
+  platforms: [windows, mac, linux]
+  pricing: free
+  openSource: true
+  checked: 2026-10-24
+- id: kindle-previewer
+  name: Kindle Previewer
+  url: https://kdp.amazon.com/en_US/help/topic/G202131170
+  description: כלי רשמי של Amazon לתצוגה מקדימה של ספרי Kindle לפני פרסום.
+  category: validation
+  platforms: [windows, mac]
+  pricing: free
+  openSource: false
+  checked: 2026-10-24
+- id: kindle-create
+  name: Kindle Create
+  url: https://www.amazon.com/Kindle-Create/b?ie=UTF8&node=18292298011
+  description: כלי רשמי של Amazon להכנת ספרים להפצה ב־Kindle.
+  category: authoring
+  platforms: [windows, mac]
+  pricing: free
+  openSource: false
+  checked: 2026-10-24
+- id: apple-books
+  name: Apple Books
+  url: https://www.apple.com/apple-books/
+  description: יישום Apple לקריאת ספרים וספרי שמע במכשירי Apple.
+  category: reading
+  platforms: [mac, ios]
+  pricing: free
+  openSource: false
+  checked: 2026-10-24
+- id: google-play-books
+  name: Google Play Books
+  url: https://play.google.com/store/apps/details?id=com.google.android.apps.books
+  description: יישום Google לקריאת ספרים אלקטרוניים וספרי שמע ב־Android.
+  category: reading
+  platforms: [android]
+  pricing: free
+  openSource: false
+  checked: 2026-10-24
+- id: vellum
+  name: Vellum
+  url: https://vellum.pub/
+  description: תוכנת Mac לעיצוב ולהכנת ספרים דיגיטליים ומודפסים.
+  category: authoring
+  platforms: [mac]
+  pricing: paid
+  openSource: false
+  checked: 2026-10-24
+- id: readium-kotlin-toolkit
+  name: Readium Kotlin Toolkit
+  url: https://github.com/readium/kotlin-toolkit
+  description: ספריית Kotlin פתוחה לבניית יישומים לספרים אלקטרוניים, ספרי שמע וקומיקס.
+  category: libraries
+  platforms: [android]
+  pricing: free
+  openSource: true
+  checked: 2026-10-24

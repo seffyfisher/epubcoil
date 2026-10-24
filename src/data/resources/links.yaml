@@ -1,0 +1,152 @@
+- id: epub-33
+  title: EPUB 3.3
+  url: https://www.w3.org/TR/epub-33/
+  description: המפרט המרכזי של W3C למבנה ולסמנטיקה של פרסומי EPUB 3.
+  category: standards
+  region: world
+  lang: en
+  checked: 2026-10-24
+- id: epub-reading-systems-33
+  title: EPUB Reading Systems 3.3
+  url: https://www.w3.org/TR/epub-rs-33/
+  description: דרישות והמלצות למערכות קריאה שמציגות קובצי EPUB 3.
+  category: standards
+  region: world
+  lang: en
+  checked: 2026-10-24
+- id: epub-accessibility-11
+  title: EPUB Accessibility 1.1
+  url: https://www.w3.org/TR/epub-a11y-11/
+  description: תקן W3C להצהרה ולמימוש של נגישות בפרסומי EPUB.
+  category: standards
+  region: world
+  lang: en
+  checked: 2026-10-24
+- id: w3c-publishing
+  title: W3C Publishing
+  url: https://www.w3.org/ecosystems/publishing/
+  description: עמוד הפעילות של W3C בתחומי פרסום דיגיטלי ותקני ווב לפרסומים.
+  category: communities
+  region: world
+  lang: en
+  checked: 2026-10-24
+- id: w3c-publishing-community-group
+  title: W3C Publishing Community Group
+  url: https://www.w3.org/community/publishingcg/
+  description: קהילת W3C פתוחה לדיון ולעבודה משותפת על פרסום דיגיטלי.
+  category: communities
+  region: world
+  lang: en
+  checked: 2026-10-24
+- id: daisy-consortium
+  title: DAISY Consortium
+  url: https://daisy.org/
+  description: ארגון העוסק בתקנים ובכלים לפרסומים נגישים ולקריאה נגישה.
+  category: communities
+  region: world
+  lang: en
+  checked: 2026-10-24
+- id: mobileread-forums
+  title: MobileRead Forums
+  url: https://www.mobileread.com/forums/
+  description: פורום קהילתי ותיק על קוראים דיגיטליים, פורמטים ותוכנות ספרים אלקטרוניים.
+  category: communities
+  region: world
+  lang: en
+  checked: 2026-10-24
+- id: apple-books-asset-guide
+  title: Apple Books Asset Guide
+  url: https://help.apple.com/itc/booksassetguide/en.lproj/static.html
+  description: מדריך Apple להגשת נכסי ספרים ולדרישות קבצים עבור Apple Books.
+  category: publisher-guidelines
+  region: world
+  lang: en
+  checked: 2026-10-24
+- id: kdp-ebook-manuscript-formatting
+  title: KDP eBook Manuscript Formatting Guide
+  url: https://kdp.amazon.com/en_US/help/topic/G200645680
+  description: הנחיות Amazon KDP להכנת כתב יד של ספר אלקטרוני.
+  category: publisher-guidelines
+  region: world
+  lang: en
+  checked: 2026-10-24
+- id: mdn-css-direction
+  title: MDN CSS direction
+  url: https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/direction
+  description: תיעוד MDN למאפיין CSS direction ולקביעת כיוון בסיסי של טקסט.
+  category: documentation
+  region: world
+  lang: en
+  checked: 2026-10-24
+- id: w3c-structural-markup-rtl
+  title: W3C Structural markup and right-to-left text in HTML
+  url: https://www.w3.org/International/questions/qa-html-dir
+  description: הסבר W3C לסימון מבני של כיוון ימין־לשמאל במסמכי HTML.
+  category: documentation
+  region: world
+  lang: en
+  checked: 2026-10-24
+- id: w3c-hebrew-script-resources
+  title: W3C Hebrew Script Resources
+  url: https://www.w3.org/TR/hebr-lreq/
+  description: מסמך W3C על משאבי כתב עברי ודרישות פריסה ושפה.
+  category: specs
+  region: world
+  lang: en
+  checked: 2026-10-24
+- id: readium-css
+  title: Readium CSS
+  url: https://github.com/readium/css
+  description: גיליון סגנונות ייחוס של Readium למערכות קריאה ב־EPUB, עם תיעוד וקוד פתוח.
+  category: documentation
+  region: world
+  lang: en
+  checked: 2026-10-24
+- id: kindle-publishing-guidelines
+  title: Kindle Publishing Guidelines
+  url: https://kindlegen.s3.amazonaws.com/AmazonKindlePublishingGuidelines.pdf
+  description: מדריך PDF רשמי של Amazon להכנת ספרים להפצה בפורמטי Kindle.
+  category: publisher-guidelines
+  region: world
+  lang: en
+  checked: 2026-10-24
+- id: w3c-inline-bidi-markup
+  title: W3C Inline markup and bidirectional text in HTML
+  url: https://www.w3.org/International/articles/inline-bidi-markup/
+  description: הנחיות W3C לסימון טקסט דו־כיווני בתוך HTML, שימושיות גם בתוכן EPUB.
+  category: documentation
+  region: world
+  lang: en
+  checked: 2026-10-24
+- id: daisy-knowledge-base-publishing
+  title: DAISY Knowledge Base — Publishing
+  url: https://kb.daisy.org/publishing/docs/
+  description: מאגר ידע של DAISY על הפקת פרסומים נגישים, כולל EPUB ונגישות.
+  category: documentation
+  region: world
+  lang: en
+  checked: 2026-10-24
+- id: epub-accessibility-techniques-11
+  title: EPUB Accessibility Techniques 1.1
+  url: https://www.w3.org/TR/epub-a11y-tech-11/
+  description: טכניקות יישום של W3C להפקת EPUB נגיש בהתאם למפרט EPUB Accessibility 1.1.
+  category: specs
+  region: world
+  lang: en
+  checked: 2026-10-24
+- id: w3c-epub-specs-github
+  title: W3C EPUB Specifications
+  url: https://github.com/w3c/epub-specs
+  description: מאגר הפיתוח הציבורי של מפרטי EPUB ב־W3C, כולל טיוטות, דיווחים ודיונים.
+  category: communities
+  region: world
+  lang: en
+  checked: 2026-10-24
+- id: w3c-audiobooks
+  title: W3C Audiobooks
+  url: https://www.w3.org/TR/audiobooks/
+  description: מפרט W3C לפורמט Audiobooks מבוסס־ווב ולהצהרת המטא־נתונים שלו.
+  category: specs
+  region: world
+  lang: en
+  checked: 2026-10-24

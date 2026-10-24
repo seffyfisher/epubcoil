@@ -1,0 +1,20 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { issueUrl } from "../lib/sections";
+---
+
+<BaseLayout
+  title="אודות | epub.co.il"
+  description="על פרויקט epub.co.il ועל שיטת העבודה בו."
+  ><section class="prose" data-pagefind-body>
+    <p class="kicker">אודות</p><h1>על האתר</h1><p>
+      epub.co.il הוא פרויקט עצמאי על ספרים דיגיטליים. הוא אינו קשור לאף חנות או
+      הוצאה.
+    </p><h2>איך בודקים תוכן</h2><p>
+      העדיפות היא למקורות ראשוניים. כל מאמר מפרט את מקורותיו ואת תאריך העדכון
+      שלו.
+    </p><h2>תיקונים והצעות</h2><p>
+      אפשר <a href={issueUrl}>להציע תיקון ב־GitHub</a>.
+    </p>
+  </section></BaseLayout
+>

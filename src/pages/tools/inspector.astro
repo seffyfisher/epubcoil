@@ -1,0 +1,17 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+<BaseLayout title="בודק EPUB | epub.co.il" description="בדיקת מבנה EPUB בדפדפן, ללא העלאת הקובץ.">
+  <section class="page-head"><p class="kicker">כלים</p><h1>בודק EPUB</h1><p class="lede">הקובץ נבדק בדפדפן שלכם ולא נשלח לשום מקום.</p></section>
+  <section class="inspector" aria-labelledby="upload-title">
+    <h2 id="upload-title">בחירת קובץ</h2>
+    <div class="drop-zone" data-drop-zone tabindex="0" role="button" aria-describedby="upload-help"><p>גררו לכאן קובץ EPUB, או בחרו קובץ מהמכשיר.</p><label class="tool-button" for="epub-file">בחירת קובץ EPUB</label><input id="epub-file" data-file-input type="file" accept=".epub,application/epub+zip" /></div>
+    <p id="upload-help" class="meta">הבדיקה מתבצעת מקומית בלבד. אפשר גם לפתוח דוגמה מהאתר.</p><button class="tool-button tool-button--plain" type="button" data-sample>נסו עם ספר לדוגמה</button>
+  </section>
+  <section data-results aria-live="polite" aria-busy="false"></section>
+  <noscript><p class="notice">הבודק זקוק ל־JavaScript כדי לקרוא קובץ EPUB בדפדפן.</p></noscript>
+</BaseLayout>
+<script>import initInspector from '../../scripts/epub-inspector'; initInspector();</script>
+<style>
+  .inspector,[data-results]{max-inline-size:var(--measure);margin-block-start:2.5rem}.drop-zone{padding:clamp(1.25rem,5vw,2.5rem);border:1px dashed var(--muted);text-align:center}.drop-zone:focus,.drop-zone.is-dragging{border-color:var(--accent);background:var(--accent-soft)}.drop-zone p{margin-block-end:1rem}.drop-zone input{position:absolute;inline-size:1px;block-size:1px;overflow:hidden;clip-path:inset(50%)}.tool-button{display:inline-flex;align-items:center;justify-content:center;min-block-size:44px;padding-inline:1rem;border:1px solid var(--accent);background:var(--accent);color:var(--paper);text-decoration:none}.tool-button--plain{margin-block-start:1rem;background:transparent;color:var(--accent)}.notice{margin-block:2rem;padding:1rem;border-inline-start:3px solid var(--accent)}.result-section{margin-block:2.5rem;border-block-start:1px solid var(--rule)}.result-section h2{margin-block-start:1.25rem}.facts{display:grid;grid-template-columns:minmax(9rem,.65fr) 1fr;margin:0;border-block-start:1px solid var(--rule)}.facts dt,.facts dd{margin:0;padding:.55rem;border-block-end:1px solid var(--rule)}.facts dt{color:var(--muted)}.check-list,.tree{padding-inline-start:1.35rem}.check-list{list-style:none;padding:0}.check-list li{padding:.8rem 0;border-block-end:1px solid var(--rule)}.severity{display:inline-block;min-inline-size:4rem;color:var(--accent);font-size:.8rem;font-weight:700}.result-table{inline-size:100%;border-collapse:collapse;font-size:.88rem}.result-table th,.result-table td{padding:.45rem;border:1px solid var(--rule);text-align:start;vertical-align:top}.result-table-wrap{overflow-x:auto}.cover{max-block-size:18rem;border:1px solid var(--rule)}.result-section details{border-block-end:1px solid var(--rule);padding:.75rem 0}@media(max-width:480px){.facts{grid-template-columns:1fr}.facts dt{padding-block-end:0}.facts dd{padding-block-start:.2rem}}
+</style>

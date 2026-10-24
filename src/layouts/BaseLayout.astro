@@ -1,0 +1,35 @@
+---
+import "../styles/global.css";
+import Footer from "../components/Footer.astro";
+import Head from "../components/Head.astro";
+import Header from "../components/Header.astro";
+
+const {
+  title = "epub.co.il",
+  description = "ידע עברי על ספרים דיגיטליים",
+  canonical,
+  jsonld = [],
+  type,
+  modified,
+} = Astro.props;
+const url = canonical ?? new URL(Astro.url.pathname, Astro.site).href;
+const themeBoot = `(function(){var k='epubcoil.theme',n={system:'מערכת',light:'בהיר',dark:'כהה'},v=localStorage.getItem(k)||'system';document.documentElement.dataset.theme=v;document.addEventListener('DOMContentLoaded',function(){var b=document.querySelector('[data-theme-toggle]');if(!b)return;function d(){b.setAttribute('aria-pressed',String(v!=='system'));b.setAttribute('aria-label','החלפת ערכת צבעים: '+n[v]);b.querySelector('[data-theme-name]').textContent=n[v]}d();b.addEventListener('click',function(){v=v==='system'?'light':v==='light'?'dark':'system';localStorage.setItem(k,v);document.documentElement.dataset.theme=v;d()})})}())`;
+---
+
+<!doctype html>
+<html lang="he" dir="rtl" data-theme="system">
+  <head
+    ><script is:inline set:html={themeBoot} /><Head
+      {title}
+      {description}
+      canonical={url}
+      {jsonld}
+      {type}
+      {modified}
+    /></head
+  >
+  <body>
+    <a class="skip-link" href="#main">דילוג לתוכן</a><Header />
+    <main id="main"><div class="shell"><slot /></div></main><Footer />
+  </body>
+</html>

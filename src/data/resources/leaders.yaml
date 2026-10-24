@@ -1,0 +1,98 @@
+- id: w3c-publishing
+  name: W3C Publishing
+  kind: organization
+  region: world
+  why: מסגרת W3C לקידום תקני ווב ותקנים פתוחים עבור פרסום דיגיטלי.
+  url: https://www.w3.org/ecosystems/publishing/
+  checked: 2026-10-24
+- id: w3c-publishing-community-group
+  name: W3C Publishing Community Group
+  kind: organization
+  region: world
+  why: קהילה פתוחה שמחברת בעלי עניין בעבודה על פרסום דיגיטלי ב־W3C.
+  url: https://www.w3.org/community/publishingcg/
+  checked: 2026-10-24
+- id: daisy-consortium
+  name: DAISY Consortium
+  kind: organization
+  region: world
+  why: ארגון מרכזי בקידום נגישות של פרסומים דיגיטליים וכלי בדיקה ל־EPUB.
+  url: https://daisy.org/
+  checked: 2026-10-24
+- id: readium
+  name: Readium
+  kind: organization
+  region: world
+  why: מיזם קוד פתוח שמפתח תשתיות קריאה התואמות לתקני EPUB.
+  url: https://readium.org/
+  checked: 2026-10-24
+- id: edrlab
+  name: EDRLab
+  kind: organization
+  region: world
+  why: מעבדה אירופית לפיתוח תוכנות ותשתיות פתוחות לקריאה דיגיטלית.
+  url: https://www.edrlab.org/
+  checked: 2026-10-24
+- id: standard-ebooks
+  name: Standard Ebooks
+  kind: organization
+  region: world
+  why: פרויקט הפקה של מהדורות דיגיטליות חופשיות עם כללי טיפוגרפיה ועריכה גלויים.
+  url: https://standardebooks.org/
+  checked: 2026-10-24
+- id: project-gutenberg
+  name: Project Gutenberg
+  kind: organization
+  region: world
+  why: אחד המיזמים הוותיקים להפצת ספרים אלקטרוניים חופשיים ברשות הציבור.
+  url: https://www.gutenberg.org/
+  checked: 2026-10-24
+- id: internet-archive
+  name: Internet Archive
+  kind: organization
+  region: world
+  why: ספרייה דיגיטלית ציבורית הכוללת אוספי טקסטים וסריקות ספרים.
+  url: https://archive.org/details/texts
+  checked: 2026-10-24
+- id: ben-yehuda-project
+  name: פרויקט בן־יהודה
+  kind: organization
+  region: israel
+  why: מיזם ישראלי ציבורי לשימור ולהנגשה מקוונת של נכסי תרבות עבריים.
+  url: https://benyehuda.org/
+  checked: 2026-10-24
+- id: matt-garrish
+  name: Matt Garrish
+  kind: person
+  region: world
+  why: עורך מפרט EPUB 3.3 ב־W3C ונציג DAISY Consortium במסטהד של המפרט.
+  url: https://www.w3.org/TR/epub-33/
+  checked: 2026-10-24
+- id: ivan-herman
+  name: Ivan Herman
+  kind: person
+  region: world
+  why: עורך מפרט EPUB 3.3 ב־W3C, כפי שמופיע במסטהד של המפרט.
+  url: https://www.w3.org/TR/epub-33/
+  checked: 2026-10-24
+- id: george-kerscher
+  name: George Kerscher
+  kind: person
+  region: world
+  why: עורך מפרט EPUB Accessibility 1.1 ב־W3C ונציג DAISY Consortium במסטהד שלו.
+  url: https://www.w3.org/TR/epub-a11y-11/
+  checked: 2026-10-24
+- id: charles-lapierre
+  name: Charles LaPierre
+  kind: person
+  region: world
+  why: עורך מפרט EPUB Accessibility 1.1 ב־W3C ונציג Benetech במסטהד שלו.
+  url: https://www.w3.org/TR/epub-a11y-11/
+  checked: 2026-10-24
+- id: avneesh-singh
+  name: Avneesh Singh
+  kind: person
+  region: world
+  why: עורך מפרט EPUB Accessibility 1.1 ב־W3C ונציג DAISY Consortium במסטהד שלו.
+  url: https://www.w3.org/TR/epub-a11y-11/
+  checked: 2026-10-24

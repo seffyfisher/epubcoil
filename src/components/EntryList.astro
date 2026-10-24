@@ -1,0 +1,23 @@
+---
+import { articlePath } from "../lib/links";
+import { formatHebrewDate } from "../lib/dates";
+
+const { articles } = Astro.props;
+---
+
+<ol class="entry-list">
+  {
+    articles.map((article) => (
+      <li>
+        <h2>
+          <a href={articlePath(article)}>{article.data.title}</a>
+        </h2>
+        <p class="entry-meta">
+          <time datetime={article.data.updated.toISOString()}>
+            {formatHebrewDate(article.data.updated)}
+          </time>
+        </p>
+      </li>
+    ))
+  }
+</ol>

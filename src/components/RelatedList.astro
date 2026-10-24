@@ -1,0 +1,19 @@
+---
+import { articlePath } from "../lib/links";
+
+const { items } = Astro.props;
+---
+
+<section class="related-list">
+  <h2 id="related">
+    קריאה נוספת<a class="heading-anchor" href="#related" aria-label="קישור לקריאה נוספת">#</a>
+  </h2>
+  {
+    items.map((item) => (
+      <a href={articlePath(item)}>
+        <strong>{item.data.title}</strong>
+        <span>{item.data.answer}</span>
+      </a>
+    ))
+  }
+</section>
