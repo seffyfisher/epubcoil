@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="he" dir="rtl" data-demo-book="../hebrew.epub">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#faf8f2">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#181715">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="קורא EPUB">
+  <meta name="description" content="קורא ספרים דיגיטליים בפורמט EPUB עבור epub.co.il — קריאה פרטית בדפדפן וללא חיבור">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <link rel="icon" type="image/svg+xml" href="./icons/favicon.svg">
+  <link rel="stylesheet" href="./reader.css">
+  <title>קורא EPUB — epub.co.il</title>
+</head>
+<body>
+  <main id="app">
+    <div id="live" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- Actionable Error Banner (never leaves a stuck spinner) -->
+    <section id="error-banner" class="error-banner" role="alert" dir="rtl" hidden>
+      <div class="error-banner-body">
+        <svg class="error-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 8v4M12 16h.01"/>
+        </svg>
+        <p id="error-text" class="error-text"></p>
+      </div>
+      <div class="error-banner-actions">
+        <button type="button" id="error-retry-btn" class="button tiny">ניסיון חוזר</button>
+        <button type="button" id="error-back-btn" class="button tiny primary">חזרה לספרייה</button>
+      </div>
+    </section>
+
+    <!-- Library Home View -->
+    <section id="library" aria-labelledby="library-title" dir="rtl">
+      <header class="library-head">
+        <div>
+          <p class="eyebrow">epub.co.il</p>
+          <h1 id="library-title">הספרייה שלי</h1>
+        </div>
+        <button type="button" class="icon" id="library-settings" aria-label="הגדרות">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
+      </header>
+
+      <div id="install-hint" class="install-hint" hidden></div>
+
+      <div class="library-actions">
+        <label class="open-file button primary" for="file-input">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          <span>פתיחת קובץ EPUB</span>
+          <input id="file-input" type="file" accept=".epub,application/epub+zip" hidden>
+        </label>
+
+        <button type="button" id="open-demo" class="demo-card">
+          <span class="demo-mark" aria-hidden="true">א</span>
+          <span class="demo-card-text">
+            <b>ספר ההדגמה</b>
+            <small>מהו EPUB — מדריך קצר בעברית (קריאה מימין לשמאל)</small>
+          </span>
+          <span class="demo-arrow" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+          </span>
+        </button>
+
+        <p id="drop-note" class="drop-note">אפשר גם לגרור לכאן קובץ EPUB לקריאה מיידית · הקבצים נשמרים במכשיר בלבד</p>
+      </div>
+
+      <section class="saved-books-section" aria-label="ספרים שמורים במכשיר">
+        <div id="book-list" class="book-list"></div>
+      </section>
+    </section>
+
+    <!-- Book Reader View -->
+    <section id="reader" hidden>
+      <header id="topbar" dir="rtl">
+        <button type="button" class="icon" id="back" aria-label="חזרה לספרייה">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </button>
+        <span id="topbar-toc-slot" class="toolbar-slot"></span>
+
+        <div id="book-title" title="" dir="auto"></div>
+
+        <span id="topbar-actions-slot" class="toolbar-slot"></span>
+      </header>
+
+      <div id="viewer-wrap">
+        <foliate-view id="view"></foliate-view>
+        <div id="reading-footer" class="reading-footer" dir="rtl" aria-label="נתוני עמוד ופרק">
+          <span id="footer-chapter" class="footer-part footer-chapter" dir="auto" hidden></span>
+          <span id="footer-page" class="footer-part footer-page"></span>
+          <span id="footer-pages-left" class="footer-part footer-pages-left"></span>
+          <span id="footer-percent" class="footer-part footer-percent"></span>
+        </div>
+        <button type="button" class="tap prev" aria-label="עמוד קודם"></button>
+        <button type="button" class="tap centre" aria-label="הצגת או הסתרת סרגלי הכלים"></button>
+        <button type="button" class="tap next" aria-label="עמוד הבא"></button>
+        <div id="loading" role="status" hidden>טוען את הספר…</div>
+      </div>
+
+      <footer id="bottom" dir="rtl">
+        <div class="bottom-progress-row">
+          <span id="chapter" dir="auto">—</span>
+          <output id="percent" for="progress">0%</output>
+          <input
+            id="progress"
+            aria-label="התקדמות בקריאה"
+            type="range"
+            min="0"
+            max="1000"
+            value="0"
+          >
+          <label class="go-percent-wrap" for="go-percent">
+            <span>מעבר ל־</span>
+            <input
+              id="go-percent"
+              aria-label="מעבר לאחוז בספר"
+              inputmode="numeric"
+              type="number"
+              min="0"
+              max="100"
+              value="0"
+            >
+            <span>%</span>
+          </label>
+        </div>
+
+        <nav id="bottom-tools" class="bottom-tools" aria-label="כלי קריאה">
+          <button type="button" class="icon" id="toc-btn" aria-label="תוכן עניינים">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+          </button>
+          <button type="button" class="icon" id="bookmark-btn" aria-label="הוספת סימנייה לעמוד זה" aria-pressed="false">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+            </svg>
+            <span class="sr-only">☆</span>
+          </button>
+          <button type="button" class="icon" id="bookmarks-btn" aria-label="סימניות">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="M16 4h2a2 2 0 0 1 2 2v14l-5-3-5 3V6a2 2 0 0 1 2-2h4z"/>
+              <path d="M6 2h10"/>
+            </svg>
+          </button>
+          <button type="button" class="icon" id="search-btn" aria-label="חיפוש בספר">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="11" cy="11" r="7"/>
+              <path d="M21 21l-4.35-4.35"/>
+            </svg>
+          </button>
+          <button type="button" class="icon" id="fullscreen-btn" aria-label="מעבר למסך מלא" hidden>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+            </svg>
+          </button>
+          <button type="button" class="icon" id="settings-btn" aria-label="הגדרות">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          </button>
+        </nav>
+      </footer>
+    </section>
+  </main>
+
+  <div id="toast" role="status" aria-live="polite" dir="rtl"></div>
+  <div id="modal-backdrop" hidden></div>
+
+  <aside
+    id="drawer"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="drawer-title"
+    dir="rtl"
+    hidden
+    tabindex="-1"
+  >
+    <div class="drawer-grab-handle" id="drawer-grab-handle" aria-hidden="true">
+      <span class="drawer-grab-pill"></span>
+    </div>
+    <header class="drawer-header" id="drawer-header">
+      <h2 id="drawer-title">תוכן עניינים</h2>
+      <button type="button" class="icon close" id="drawer-close-btn" aria-label="סגירה">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M18 6L6 18M6 6l12 12"/>
+        </svg>
+      </button>
+    </header>
+    <div id="drawer-content" class="drawer-content"></div>
+  </aside>
+
+  <!-- Full-screen Image Viewer Overlay (double-tap / pinch-zoom on book images) -->
+  <div
+    id="image-viewer"
+    class="image-viewer"
+    role="dialog"
+    aria-modal="true"
+    aria-label="תצוגת תמונה"
+    dir="rtl"
+    hidden
+    tabindex="-1"
+  >
+    <button type="button" class="icon image-viewer-close" id="image-viewer-close" aria-label="סגירה">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M18 6L6 18M6 6l12 12"/>
+      </svg>
+    </button>
+    <div id="image-viewer-stage" class="image-viewer-stage">
+      <img id="image-viewer-img" class="image-viewer-img" alt="">
+    </div>
+  </div>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
