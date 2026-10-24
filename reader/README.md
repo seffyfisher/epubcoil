@@ -38,3 +38,12 @@
 כתובת ספר ההדגמה ברירת המחדל היא `../hebrew.epub`. ניתן לשנותה בשתי דרכים:
 1. פרמטר בשורת הכתובת: `/reader/?book=/path/to/demo.epub`
 2. תכונת HTML על אלמנט ה־`<html>` בקובץ `reader/index.html`: `data-demo-book="../hebrew.epub"`
+
+## עדכון גרסה / Updating
+
+בכל פריסה שמשנה קובץ במעטפת האפליקציה, העלו את `VERSION` ב־`reader/sw.js`. כך המשתמשים יקבלו הודעת "גרסה חדשה זמינה".
+Bump `VERSION` in `reader/sw.js` on every deploy that changes a shell file, so users get the update prompt.
+
+## בדיקות / Tests
+
+`npm i && npx playwright test` (24 tests, 390x844 + 1280x800).
