@@ -2,7 +2,7 @@
 
 _Hebrew knowledge hub and free in-browser tools for digital books (EPUB). Astro 5, static, content in Markdown/YAML._
 
-מדריך עברי עצמאי לספרים דיגיטליים, EPUB, הפקה, קריאה ועבודה מימין לשמאל.
+מדריך עברי לספרים דיגיטליים, EPUB, הפקה, קריאה ועבודה מימין לשמאל.
 
 ## הפעלה
 

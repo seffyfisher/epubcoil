@@ -16,7 +16,7 @@ export async function GET() {
   );
   const output = [
     "# epub.co.il",
-    "ידע עברי עצמאי על ספרים דיגיטליים ו־EPUB, עם התמחות בעברית ו־RTL.",
+    "ידע עברי על ספרים דיגיטליים ו־EPUB, עם התמחות בעברית ו־RTL.",
     "## מדורים",
     ...sections.map(
       (section) => `- ${section.title}: https://epub.co.il/${section.key}/`,

@@ -257,6 +257,53 @@ p {
 .article-header {
   max-inline-size: var(--measure);
 }
+.menu-label-more {
+  margin-block-start: 1rem;
+}
+
+/* Home: reading-app call to action, right under the lead. */
+.reader-cta {
+  display: grid;
+  gap: 1.1rem;
+  align-items: center;
+  margin-block: 2rem 0.5rem;
+  padding-block: 1.4rem;
+  border-block: 1px solid var(--ink);
+}
+.reader-cta h2 {
+  margin: 0 0 0.4rem;
+  font-size: clamp(1.35rem, 3vw, 1.7rem);
+}
+.reader-cta p:not(.kicker) {
+  max-inline-size: 52ch;
+  margin: 0;
+  color: var(--muted);
+}
+.button-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: start;
+  min-block-size: 48px;
+  padding-inline: 1.4rem;
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 600;
+  text-decoration: none;
+}
+.button-primary:hover {
+  background: var(--accent);
+  color: var(--paper);
+}
+@media (min-width: 700px) {
+  .reader-cta {
+    grid-template-columns: 1fr auto;
+  }
+  .button-primary {
+    justify-self: end;
+  }
+}
+
 .page-head {
   padding-block-end: 2.4rem;
   border-block-end: 1px solid var(--rule);
@@ -734,7 +781,7 @@ p {
     justify-content: flex-end;
     flex-wrap: wrap;
   }
-  .primary-nav > a:not(.search-link),
+  .primary-nav > a:not(.search-link, .reader-link),
   .theme-toggle {
     display: none;
   }
@@ -778,4 +825,10 @@ p {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Avoid a double rule between the home lead and the reader CTA. */
+.page-head:has(+ .reader-cta) {
+  padding-block-end: 1.6rem;
+  border-block-end: 0;
 }

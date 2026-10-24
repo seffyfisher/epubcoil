@@ -26,8 +26,20 @@ const path = Astro.url.pathname;
               </a>
             ))
           }
+          <p class="menu-label menu-label-more">עוד</p>
+          <a href="/reader/">קורא</a>
+          <a href="/glossary/">מילון</a>
+          <a href="/resources/">משאבים</a>
+          <a href="/tools/">כלים</a>
+          <a href="/about/">אודות</a>
         </div>
       </details>
+      <a
+        class="reader-link"
+        href="/reader/"
+        aria-current={path.startsWith("/reader/") ? "page" : undefined}
+        >קורא</a
+      >
       <a
         href="/glossary/"
         aria-current={path.startsWith("/glossary/") ? "page" : undefined}
