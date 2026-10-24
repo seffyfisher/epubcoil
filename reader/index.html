@@ -90,43 +90,11 @@
             <path d="M5 12h14M12 5l7 7-7 7"/>
           </svg>
         </button>
-        <button type="button" class="icon" id="toc-btn" aria-label="תוכן עניינים">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path d="M4 6h16M4 12h16M4 18h16"/>
-          </svg>
-        </button>
+        <span id="topbar-toc-slot" class="toolbar-slot"></span>
 
         <div id="book-title" title="" dir="auto"></div>
 
-        <button type="button" class="icon" id="bookmark-btn" aria-label="הוספת סימנייה לעמוד זה" aria-pressed="false">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
-          </svg>
-          <span class="sr-only">☆</span>
-        </button>
-        <button type="button" class="icon" id="bookmarks-btn" aria-label="סימניות">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-            <path d="M16 4h2a2 2 0 0 1 2 2v14l-5-3-5 3V6a2 2 0 0 1 2-2h4z"/>
-            <path d="M6 2h10"/>
-          </svg>
-        </button>
-        <button type="button" class="icon" id="search-btn" aria-label="חיפוש בספר">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <circle cx="11" cy="11" r="7"/>
-            <path d="M21 21l-4.35-4.35"/>
-          </svg>
-        </button>
-        <button type="button" class="icon" id="fullscreen-btn" aria-label="מעבר למסך מלא" hidden>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
-          </svg>
-        </button>
-        <button type="button" class="icon" id="settings-btn" aria-label="הגדרות">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-          </svg>
-        </button>
+        <span id="topbar-actions-slot" class="toolbar-slot"></span>
       </header>
 
       <div id="viewer-wrap">
@@ -138,29 +106,68 @@
       </div>
 
       <footer id="bottom" dir="rtl">
-        <span id="chapter" dir="auto">—</span>
-        <output id="percent" for="progress">0%</output>
-        <input
-          id="progress"
-          aria-label="התקדמות בקריאה"
-          type="range"
-          min="0"
-          max="1000"
-          value="0"
-        >
-        <label class="go-percent-wrap" for="go-percent">
-          <span>מעבר ל־</span>
+        <div class="bottom-progress-row">
+          <span id="chapter" dir="auto">—</span>
+          <output id="percent" for="progress">0%</output>
           <input
-            id="go-percent"
-            aria-label="מעבר לאחוז בספר"
-            inputmode="numeric"
-            type="number"
+            id="progress"
+            aria-label="התקדמות בקריאה"
+            type="range"
             min="0"
-            max="100"
+            max="1000"
             value="0"
           >
-          <span>%</span>
-        </label>
+          <label class="go-percent-wrap" for="go-percent">
+            <span>מעבר ל־</span>
+            <input
+              id="go-percent"
+              aria-label="מעבר לאחוז בספר"
+              inputmode="numeric"
+              type="number"
+              min="0"
+              max="100"
+              value="0"
+            >
+            <span>%</span>
+          </label>
+        </div>
+
+        <nav id="bottom-tools" class="bottom-tools" aria-label="כלי קריאה">
+          <button type="button" class="icon" id="toc-btn" aria-label="תוכן עניינים">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+          </button>
+          <button type="button" class="icon" id="bookmark-btn" aria-label="הוספת סימנייה לעמוד זה" aria-pressed="false">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+            </svg>
+            <span class="sr-only">☆</span>
+          </button>
+          <button type="button" class="icon" id="bookmarks-btn" aria-label="סימניות">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="M16 4h2a2 2 0 0 1 2 2v14l-5-3-5 3V6a2 2 0 0 1 2-2h4z"/>
+              <path d="M6 2h10"/>
+            </svg>
+          </button>
+          <button type="button" class="icon" id="search-btn" aria-label="חיפוש בספר">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="11" cy="11" r="7"/>
+              <path d="M21 21l-4.35-4.35"/>
+            </svg>
+          </button>
+          <button type="button" class="icon" id="fullscreen-btn" aria-label="מעבר למסך מלא" hidden>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+            </svg>
+          </button>
+          <button type="button" class="icon" id="settings-btn" aria-label="הגדרות">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          </button>
+        </nav>
       </footer>
     </section>
   </main>
@@ -177,7 +184,10 @@
     hidden
     tabindex="-1"
   >
-    <header class="drawer-header">
+    <div class="drawer-grab-handle" id="drawer-grab-handle" aria-hidden="true">
+      <span class="drawer-grab-pill"></span>
+    </div>
+    <header class="drawer-header" id="drawer-header">
       <h2 id="drawer-title">תוכן עניינים</h2>
       <button type="button" class="icon close" id="drawer-close-btn" aria-label="סגירה">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -187,6 +197,27 @@
     </header>
     <div id="drawer-content" class="drawer-content"></div>
   </aside>
+
+  <!-- Full-screen Image Viewer Overlay (double-tap / pinch-zoom on book images) -->
+  <div
+    id="image-viewer"
+    class="image-viewer"
+    role="dialog"
+    aria-modal="true"
+    aria-label="תצוגת תמונה"
+    dir="rtl"
+    hidden
+    tabindex="-1"
+  >
+    <button type="button" class="icon image-viewer-close" id="image-viewer-close" aria-label="סגירה">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M18 6L6 18M6 6l12 12"/>
+      </svg>
+    </button>
+    <div id="image-viewer-stage" class="image-viewer-stage">
+      <img id="image-viewer-img" class="image-viewer-img" alt="">
+    </div>
+  </div>
 
   <script type="module" src="./app.js"></script>
 </body>

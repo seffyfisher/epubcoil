@@ -168,7 +168,16 @@ export async function renderLibraryList(listContainer, {
 
       return `
         <article class="book-card" data-book-id="${escapeHTML(book.id)}">
-          ${coverMarkup}
+          <div class="book-cover-wrap">
+            <button type="button" class="cover-btn open-saved" data-id="${escapeHTML(book.id)}" aria-label="${STRINGS.openBookAria} — ${escapeHTML(title)}">
+              ${coverMarkup}
+            </button>
+            <button type="button" class="icon remove-saved danger" data-id="${escapeHTML(book.id)}" aria-label="${STRINGS.removeBookAria} — ${escapeHTML(title)}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
           <div class="book-info">
             <button type="button" class="book-title-btn open-saved" data-id="${escapeHTML(book.id)}">
               <b dir="auto">${escapeHTML(title)}</b>
@@ -177,18 +186,6 @@ export async function renderLibraryList(listContainer, {
             <div class="book-progress-track" aria-hidden="true">
               <div class="book-progress-fill" style="width: ${percent}%"></div>
             </div>
-          </div>
-          <div class="book-card-actions">
-            <button type="button" class="icon open-saved" data-id="${escapeHTML(book.id)}" aria-label="${STRINGS.openBookAria} — ${escapeHTML(title)}">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path d="M19 12H5M12 19l-7-7 7-7"/>
-              </svg>
-            </button>
-            <button type="button" class="icon remove-saved danger" data-id="${escapeHTML(book.id)}" aria-label="${STRINGS.removeBookAria} — ${escapeHTML(title)}">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path d="M18 6L6 18M6 6l12 12"/>
-              </svg>
-            </button>
           </div>
         </article>
       `;

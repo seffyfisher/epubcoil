@@ -43,6 +43,7 @@ export class FixedLayout extends HTMLElement {
     #center
     #side
     #zoom
+    #touchState
     constructor() {
         super()
 
@@ -55,9 +56,73 @@ export class FixedLayout extends HTMLElement {
             justify-content: center;
             align-items: center;
             overflow: auto;
+            touch-action: pan-x pan-y pinch-zoom;
         }`)
 
         this.#observer.observe(this)
+        this.#bindTouch(this)
+    }
+    #bindTouch(target) {
+        target.addEventListener('touchstart', e => {
+            if (e.touches.length === 2) {
+                const [t1, t2] = e.touches
+                const dist = Math.hypot(t2.screenX - t1.screenX, t2.screenY - t1.screenY)
+                this.#touchState = {
+                    pinching: true,
+                    startDist: Math.max(10, dist),
+                    baseScale: typeof this.#zoom === 'number' && !isNaN(this.#zoom) ? this.#zoom : 1,
+                }
+                return
+            }
+            if (e.touches.length !== 1) return
+            const t = e.changedTouches[0]
+            const hostRect = this.getBoundingClientRect()
+            const targetDoc = e.currentTarget?.nodeType === 9 ? e.currentTarget : null
+            const frame = targetDoc?.__hostFrame || targetDoc?.defaultView?.frameElement
+            const hostX = frame ? frame.getBoundingClientRect().left + t.clientX : t.clientX
+            const relX = hostX - hostRect.left
+            const edgeSwipe = hostRect.width > 0 && (relX < 20 || relX > hostRect.width - 20)
+            this.#touchState = {
+                pinching: false,
+                startX: t.screenX,
+                startY: t.screenY,
+                totalDx: 0,
+                totalDy: 0,
+                edgeSwipe,
+            }
+        }, { passive: true })
+        target.addEventListener('touchmove', e => {
+            const state = this.#touchState
+            if (!state) return
+            if (state.pinching && e.touches.length === 2) {
+                const [t1, t2] = e.touches
+                const dist = Math.hypot(t2.screenX - t1.screenX, t2.screenY - t1.screenY)
+                const nextZoom = Math.max(0.5, Math.min(4, state.baseScale * (dist / state.startDist)))
+                this.#zoom = nextZoom
+                this.#render()
+                return
+            }
+            if (e.touches.length > 1) {
+                state.pinching = true
+                return
+            }
+            const t = e.changedTouches[0]
+            if (!t) return
+            state.totalDx = state.startX - t.screenX
+            state.totalDy = state.startY - t.screenY
+        }, { passive: true })
+        target.addEventListener('touchend', () => {
+            const state = this.#touchState
+            this.#touchState = null
+            if (!state || state.pinching || state.edgeSwipe) return
+            if ((globalThis.visualViewport?.scale ?? 1) > 1.05) return
+            if (typeof this.#zoom === 'number' && this.#zoom > 1.05) return
+            if (Math.abs(state.totalDx) > 50 && Math.abs(state.totalDx) > Math.abs(state.totalDy) * 1.5) {
+                const isRtl = Boolean(this.rtl || this.bookDir === 'rtl')
+                const dir = (isRtl ? -state.totalDx : state.totalDx) > 0 ? 1 : -1
+                this.dispatchEvent(new CustomEvent('swipe-turn', { detail: { dir } }))
+            }
+        }, { passive: true })
     }
     attributeChangedCallback(name, _, value) {
         switch (name) {
@@ -91,6 +156,10 @@ export class FixedLayout extends HTMLElement {
         return new Promise(resolve => {
             iframe.addEventListener('load', () => {
                 const doc = iframe.contentDocument
+                if (doc) {
+                    doc.__hostFrame = iframe
+                    this.#bindTouch(doc)
+                }
                 this.dispatchEvent(new CustomEvent('load', { detail: { doc, index } }))
                 const { width, height } = getViewport(doc, this.defaultViewport)
                 resolve({

@@ -48,7 +48,16 @@ let saveTimer = null;
 let chromeTimer = null;
 let liveTimer = null;
 let toastTimer = null;
+let resizeTimer = null;
 let lastAttemptAction = null;
+let lastTouchTapTime = -1e9;
+let lastTapHandledAt = -1e9;
+let lastImageTap = { el: null, time: -1e9 };
+let imageViewerLastFocused = null;
+let imageViewerOpenedAt = -1e9;
+let imageZoomState = { scale: 1, tx: 0, ty: 0 };
+
+const boundDocs = new WeakSet();
 
 const wakeLock = new WakeLockController();
 
@@ -253,18 +262,464 @@ function handleRelocate(loc) {
 }
 
 /**
+ * Move the reader action buttons (#toc-btn, #bookmark-btn, #bookmarks-btn, #search-btn,
+ * #fullscreen-btn, #settings-btn) between the thumb-reachable #bottom-tools bar on phones
+ * (<= 640px) and the #topbar slots on wider viewports (> 640px).
+ */
+function syncResponsiveToolbar() {
+  const isPhone = (globalThis.innerWidth || 390) <= 640;
+  const bottomTools = $('#bottom-tools');
+  const topTocSlot = $('#topbar-toc-slot');
+  const topActionsSlot = $('#topbar-actions-slot');
+  const tocBtn = $('#toc-btn');
+  const actionBtns = [
+    $('#bookmark-btn'),
+    $('#bookmarks-btn'),
+    $('#search-btn'),
+    $('#fullscreen-btn'),
+    $('#settings-btn'),
+  ].filter(Boolean);
+
+  if (!bottomTools || !topTocSlot || !topActionsSlot) return;
+
+  if (isPhone) {
+    bottomTools.hidden = false;
+    if (tocBtn && tocBtn.parentElement !== bottomTools) {
+      bottomTools.appendChild(tocBtn);
+    }
+    for (const btn of actionBtns) {
+      if (btn.parentElement !== bottomTools) {
+        bottomTools.appendChild(btn);
+      }
+    }
+  } else {
+    bottomTools.hidden = true;
+    if (tocBtn && tocBtn.parentElement !== topTocSlot) {
+      topTocSlot.appendChild(tocBtn);
+    }
+    for (const btn of actionBtns) {
+      if (btn.parentElement !== topActionsSlot) {
+        topActionsSlot.appendChild(btn);
+      }
+    }
+  }
+}
+
+/**
+ * Convert client coordinates from inside a book section document (iframe) to host viewport coordinates.
+ */
+function toHostCoords(doc, clientX, clientY) {
+  if (!doc || doc === document) {
+    return { x: clientX, y: clientY };
+  }
+  const frame = doc.__hostFrame || doc.defaultView?.frameElement;
+  if (!frame) {
+    return { x: clientX, y: clientY };
+  }
+  const rect = frame.getBoundingClientRect();
+  const scaleX = frame.offsetWidth ? rect.width / frame.offsetWidth : 1;
+  const scaleY = frame.offsetHeight ? rect.height / frame.offsetHeight : 1;
+  return {
+    x: rect.left + clientX * scaleX,
+    y: rect.top + clientY * scaleY,
+  };
+}
+
+/**
+ * Open a book image in the full-screen pinch-zoomable image viewer overlay.
+ */
+function openImageViewer(imgEl, triggerEl = null) {
+  const viewer = $('#image-viewer');
+  const targetImg = $('#image-viewer-img');
+  if (!viewer || !targetImg || !imgEl) return;
+
+  const innerImage =
+    imgEl.tagName?.toLowerCase() === 'svg' ? imgEl.querySelector?.('image, img') : null;
+  const candidate = innerImage || imgEl;
+
+  let src =
+    candidate.currentSrc ||
+    (typeof candidate.src === 'string' ? candidate.src : '') ||
+    (typeof candidate.href === 'string' ? candidate.href : candidate.href?.baseVal) ||
+    candidate.getAttribute?.('src') ||
+    candidate.getAttribute?.('href') ||
+    candidate.getAttribute?.('xlink:href') ||
+    candidate.getAttributeNS?.('http://www.w3.org/1999/xlink', 'href');
+
+  const svgRoot = imgEl.tagName?.toLowerCase() === 'svg' ? imgEl : imgEl.closest?.('svg');
+  if (!src && svgRoot) {
+    const serialized = new XMLSerializer().serializeToString(svgRoot);
+    src = `data:image/svg+xml;utf8,${encodeURIComponent(serialized)}`;
+  }
+  if (!src) return;
+
+  imageViewerLastFocused = triggerEl || document.activeElement;
+  imageViewerOpenedAt = performance.now();
+  imageZoomState = { scale: 1, tx: 0, ty: 0 };
+  targetImg.src = src;
+  targetImg.alt = imgEl.getAttribute?.('alt') || STRINGS.untitledBook;
+  targetImg.style.transform = 'translate(0px, 0px) scale(1)';
+  viewer.hidden = false;
+  $('#image-viewer-close')?.focus();
+}
+
+function closeImageViewer() {
+  const viewer = $('#image-viewer');
+  if (!viewer || viewer.hidden) return;
+  viewer.hidden = true;
+  const targetImg = $('#image-viewer-img');
+  if (targetImg) {
+    targetImg.src = '';
+    targetImg.style.transform = '';
+  }
+  if (imageViewerLastFocused && typeof imageViewerLastFocused.focus === 'function') {
+    try {
+      imageViewerLastFocused.focus();
+    } catch {
+      // Ignore focus errors
+    }
+  }
+  imageViewerLastFocused = null;
+}
+
+function initImageViewerControls() {
+  const viewer = $('#image-viewer');
+  const closeBtn = $('#image-viewer-close');
+  const stage = $('#image-viewer-stage');
+  const img = $('#image-viewer-img');
+  if (!viewer || !stage || !img) return;
+
+  const applyTransform = () => {
+    img.style.transform = `translate(${imageZoomState.tx}px, ${imageZoomState.ty}px) scale(${imageZoomState.scale})`;
+  };
+
+  closeBtn?.addEventListener('click', () => {
+    if (performance.now() - imageViewerOpenedAt < 250) return;
+    closeImageViewer();
+  });
+  stage.addEventListener('click', e => {
+    if (performance.now() - imageViewerOpenedAt < 350) return;
+    if (e.target === stage) closeImageViewer();
+  });
+
+  img.addEventListener('dblclick', e => {
+    e.preventDefault();
+    imageZoomState =
+      imageZoomState.scale > 1.1
+        ? { scale: 1, tx: 0, ty: 0 }
+        : { scale: 2.2, tx: 0, ty: 0 };
+    applyTransform();
+  });
+
+  let gesture = null;
+  let lastTapAt = 0;
+
+  stage.addEventListener(
+    'touchstart',
+    e => {
+      if (e.touches.length === 2) {
+        const [t1, t2] = e.touches;
+        const dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+        gesture = {
+          mode: 'pinch',
+          startDist: Math.max(10, dist),
+          baseScale: imageZoomState.scale,
+        };
+      } else if (e.touches.length === 1) {
+        const t = e.touches[0];
+        gesture = {
+          mode: 'pan',
+          startX: t.clientX,
+          startY: t.clientY,
+          baseTx: imageZoomState.tx,
+          baseTy: imageZoomState.ty,
+          moved: false,
+          target: e.target,
+        };
+      }
+    },
+    { passive: true },
+  );
+
+  stage.addEventListener(
+    'touchmove',
+    e => {
+      if (!gesture) return;
+      if (gesture.mode === 'pinch' && e.touches.length === 2) {
+        if (e.cancelable) e.preventDefault();
+        const [t1, t2] = e.touches;
+        const dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+        imageZoomState.scale = Math.max(1, Math.min(4, gesture.baseScale * (dist / gesture.startDist)));
+        if (imageZoomState.scale === 1) {
+          imageZoomState.tx = 0;
+          imageZoomState.ty = 0;
+        }
+        applyTransform();
+      } else if (gesture.mode === 'pan' && e.touches.length === 1) {
+        const t = e.touches[0];
+        const dx = t.clientX - gesture.startX;
+        const dy = t.clientY - gesture.startY;
+        if (Math.hypot(dx, dy) > 8) gesture.moved = true;
+        if (imageZoomState.scale > 1.05) {
+          if (e.cancelable) e.preventDefault();
+          imageZoomState.tx = gesture.baseTx + dx;
+          imageZoomState.ty = gesture.baseTy + dy;
+          applyTransform();
+        }
+      }
+    },
+    { passive: false },
+  );
+
+  stage.addEventListener(
+    'touchend',
+    e => {
+      if (!gesture) return;
+      const g = gesture;
+      gesture = null;
+      if (g.mode === 'pan' && !g.moved && e.touches.length === 0) {
+        const now = performance.now();
+        if (g.target === img && now - lastTapAt < 340) {
+          imageZoomState =
+            imageZoomState.scale > 1.1
+              ? { scale: 1, tx: 0, ty: 0 }
+              : { scale: 2.2, tx: 0, ty: 0 };
+          applyTransform();
+          lastTapAt = 0;
+        } else if (g.target === stage && imageZoomState.scale <= 1.05) {
+          closeImageViewer();
+        } else {
+          lastTapAt = now;
+        }
+      }
+    },
+    { passive: true },
+  );
+}
+
+/**
+ * Resolve the actual DOM element inside the active section document at (hostX, hostY)
+ * when an event is retargeted to <foliate-view> across its closed shadow root.
+ */
+function resolveBookElement(target, doc, hostX, hostY) {
+  const baseEl = target?.nodeType === 1 ? target : target?.parentElement;
+  if (doc && doc !== document && baseEl) {
+    return { el: baseEl, sectionDoc: doc };
+  }
+  const contents = engine.view?.renderer?.getContents?.() || [];
+  for (const item of contents) {
+    const sDoc = item?.doc;
+    const frame = sDoc?.__hostFrame || sDoc?.defaultView?.frameElement;
+    if (!sDoc || !frame) continue;
+    const rect = frame.getBoundingClientRect();
+    if (
+      hostX >= rect.left &&
+      hostX <= rect.right &&
+      hostY >= rect.top &&
+      hostY <= rect.bottom
+    ) {
+      const localX = hostX - rect.left;
+      const localY = hostY - rect.top;
+      const hit = sDoc.elementFromPoint?.(localX, localY);
+      if (hit) {
+        return { el: hit, sectionDoc: sDoc };
+      }
+    }
+  }
+  return { el: baseEl, sectionDoc: doc };
+}
+
+/**
+ * Evaluate a tap inside the book viewport or iframe document and trigger
+ * direction-aware page turn (left/right third) or chrome toggle (centre),
+ * while ignoring drags, text selections, links, and images.
+ */
+function handleViewerTap({ hostX, hostY, target, doc }) {
+  const now = performance.now();
+  if (now - lastTapHandledAt < 60) return;
+  if ($('#reader')?.hidden || drawer.isOpen || !$('#image-viewer')?.hidden) return;
+  if ((globalThis.visualViewport?.scale ?? 1) > 1.05) return;
+
+  const { el, sectionDoc } = resolveBookElement(target, doc, hostX, hostY);
+
+  const sel = sectionDoc?.getSelection?.() || globalThis.getSelection?.();
+  if (sel && !sel.isCollapsed && sel.toString().trim().length > 0) {
+    return;
+  }
+
+  if (
+    el?.closest?.(
+      'a[href], button, input, select, textarea, label, summary, details, audio, video, [role="button"]',
+    )
+  ) {
+    return;
+  }
+
+  const mediaEl = el?.closest?.('img, svg, image');
+  if (mediaEl && sectionDoc && sectionDoc !== document) {
+    if (!currentBook?.isFixedLayout) {
+      if (lastImageTap.el === mediaEl && now - lastImageTap.time < 360) {
+        lastImageTap = { el: null, time: -1e9 };
+        lastTapHandledAt = now;
+        openImageViewer(mediaEl);
+      } else {
+        lastImageTap = { el: mediaEl, time: now };
+      }
+    }
+    return;
+  }
+
+  const wrapRect = $('#viewer-wrap')?.getBoundingClientRect();
+  if (!wrapRect || wrapRect.width <= 0) return;
+
+  const relX = (hostX - wrapRect.left) / wrapRect.width;
+  if (relX < 0 || relX > 1) return;
+
+  lastTapHandledAt = now;
+  const isRtl = (currentBook?.dir || 'rtl') === 'rtl';
+
+  if (relX < 0.3) {
+    if (isRtl) engine.next();
+    else engine.prev();
+  } else if (relX > 0.7) {
+    if (isRtl) engine.prev();
+    else engine.next();
+  } else {
+    toggleChrome();
+  }
+}
+
+/**
+ * Attach tap, double-click (image zoom), keyboard, and pointer listeners to a section document or host.
+ */
+function bindSurfaceInteractions(targetNode, doc = null) {
+  if (!targetNode || boundDocs.has(targetNode)) return;
+  boundDocs.add(targetNode);
+
+  let touchInfo = null;
+  let pointerInfo = null;
+
+  targetNode.addEventListener(
+    'touchstart',
+    e => {
+      if (e.touches.length !== 1) {
+        if (touchInfo) touchInfo.multi = true;
+        return;
+      }
+      const t = e.changedTouches[0];
+      if (!t) return;
+      const { x, y } = toHostCoords(doc, t.clientX, t.clientY);
+      touchInfo = {
+        hostX: x,
+        hostY: y,
+        screenX: t.screenX,
+        screenY: t.screenY,
+        time: performance.now(),
+        moved: false,
+        multi: false,
+        target: e.target,
+      };
+    },
+    { passive: true },
+  );
+
+  targetNode.addEventListener(
+    'touchmove',
+    e => {
+      if (!touchInfo) return;
+      if (e.touches.length > 1) {
+        touchInfo.multi = true;
+        return;
+      }
+      const t = e.changedTouches[0];
+      if (!t) return;
+      if (Math.hypot(t.screenX - touchInfo.screenX, t.screenY - touchInfo.screenY) > 10) {
+        touchInfo.moved = true;
+      }
+    },
+    { passive: true },
+  );
+
+  targetNode.addEventListener(
+    'touchend',
+    e => {
+      if (!touchInfo) return;
+      const info = touchInfo;
+      touchInfo = null;
+      const t = e.changedTouches?.[0];
+      if (t && Math.hypot(t.screenX - info.screenX, t.screenY - info.screenY) > 10) {
+        info.moved = true;
+      }
+      const duration = performance.now() - info.time;
+      if (!info.moved && !info.multi && duration < 450) {
+        lastTouchTapTime = performance.now();
+        handleViewerTap({
+          hostX: info.hostX,
+          hostY: info.hostY,
+          target: info.target,
+          doc,
+        });
+      }
+    },
+    { passive: true },
+  );
+
+  targetNode.addEventListener(
+    'pointerdown',
+    e => {
+      if (e.pointerType === 'touch') return;
+      pointerInfo = {
+        screenX: e.screenX,
+        screenY: e.screenY,
+        time: performance.now(),
+      };
+    },
+    { passive: true },
+  );
+
+  targetNode.addEventListener('click', e => {
+    if (performance.now() - lastTouchTapTime < 450) return;
+    if (pointerInfo) {
+      const dist = Math.hypot(e.screenX - pointerInfo.screenX, e.screenY - pointerInfo.screenY);
+      pointerInfo = null;
+      if (dist > 10) return;
+    }
+    const { x, y } = toHostCoords(doc, e.clientX, e.clientY);
+    handleViewerTap({
+      hostX: x,
+      hostY: y,
+      target: e.target,
+      doc,
+    });
+  });
+
+  if (doc && doc !== document) {
+    doc.addEventListener('dblclick', e => {
+      if (currentBook?.isFixedLayout) return;
+      const el = e.target?.nodeType === 1 ? e.target : e.target?.parentElement;
+      const mediaEl = el?.closest?.('img, svg, image');
+      if (mediaEl) {
+        e.preventDefault();
+        openImageViewer(mediaEl);
+      }
+    });
+  }
+}
+
+/**
  * Handle section `load` events from the foliate engine:
- * apply user typography/theme styles and attach keyboard navigation inside the iframe.
+ * apply user typography/theme styles and attach keyboard/tap navigation inside the iframe.
  */
 function handleSectionLoad({ doc }) {
   applySettingsToView(engine.view, settings, currentBook?.dir || 'rtl');
   if (doc) {
     doc.addEventListener('keydown', handleReaderKeydown);
     doc.addEventListener('pointermove', handlePointerActivity);
+    bindSurfaceInteractions(doc, doc);
   }
 }
 
-let chromeRevealedByMouseAt = 0;
+let chromeRevealedByMouseAt = -1e9;
 
 /**
  * Mouse movement reveals the chrome (desktop). Touch/pen moves are ignored so a
@@ -314,7 +769,9 @@ function scheduleChromeHide() {
 async function showLibraryView() {
   persistLocationNow();
   clearTimeout(chromeTimer);
+  closeImageViewer();
   document.body.classList.remove('chrome-hidden');
+  document.body.classList.remove('is-reading');
 
   settings.onLibrary = true;
   putSettings(settings);
@@ -420,6 +877,8 @@ async function openBookFile(file, { persist = true, id = null, existingCoverBlob
 
     if (libraryEl) libraryEl.hidden = true;
     if (readerEl) readerEl.hidden = false;
+    document.body.classList.add('is-reading');
+    syncResponsiveToolbar();
     if (titleEl) {
       titleEl.textContent = info.title;
       titleEl.title = info.title;
@@ -538,47 +997,57 @@ async function openSavedBook(id) {
 }
 
 /**
- * Open one of the slide-out drawers ('toc' | 'bookmarks' | 'search' | 'settings').
+ * Open one of the slide-out drawers / bottom sheets ('toc' | 'bookmarks' | 'search' | 'settings').
  */
-function openDrawerByKind(kind) {
+function openDrawerByKind(kind, triggerEl = null) {
   clearTimeout(chromeTimer);
   document.body.classList.remove('chrome-hidden');
 
   if (kind === 'toc') {
-    drawer.open('toc', STRINGS.tocTitle, container => {
-      renderTocDrawer(container, {
-        book: engine.book,
-        currentLocation: engine.getLocation(),
-        bookDir: currentBook?.dir || 'rtl',
-        onSelectTarget: async target => {
-          await engine.goTo(target);
-          drawer.close();
-        },
-      });
-    });
+    drawer.open(
+      'toc',
+      STRINGS.tocTitle,
+      container => {
+        renderTocDrawer(container, {
+          book: engine.book,
+          currentLocation: engine.getLocation(),
+          bookDir: currentBook?.dir || 'rtl',
+          onSelectTarget: async target => {
+            await engine.goTo(target);
+            drawer.close();
+          },
+        });
+      },
+      { triggerEl },
+    );
     return;
   }
 
   if (kind === 'bookmarks') {
-    drawer.open('bookmarks', STRINGS.bookmarksTitle, container => {
-      renderBookmarksDrawer(container, {
-        state: currentState,
-        onSelectBookmark: async cfi => {
-          await engine.goTo(cfi);
-          drawer.close();
-        },
-        onDeleteBookmark: index => {
-          currentState.bookmarks.splice(index, 1);
-          persistLocationNow();
-          updateBookmarkButton(
-            $('#bookmark-btn'),
-            currentState,
-            engine.getLocation()?.cfi,
-          );
-          openDrawerByKind('bookmarks');
-        },
-      });
-    });
+    drawer.open(
+      'bookmarks',
+      STRINGS.bookmarksTitle,
+      container => {
+        renderBookmarksDrawer(container, {
+          state: currentState,
+          onSelectBookmark: async cfi => {
+            await engine.goTo(cfi);
+            drawer.close();
+          },
+          onDeleteBookmark: index => {
+            currentState.bookmarks.splice(index, 1);
+            persistLocationNow();
+            updateBookmarkButton(
+              $('#bookmark-btn'),
+              currentState,
+              engine.getLocation()?.cfi,
+            );
+            openDrawerByKind('bookmarks', triggerEl);
+          },
+        });
+      },
+      { triggerEl },
+    );
     return;
   }
 
@@ -598,6 +1067,7 @@ function openDrawerByKind(kind) {
         });
       },
       {
+        triggerEl,
         onClose: () => {
           cancelActiveSearch?.();
         },
@@ -607,33 +1077,38 @@ function openDrawerByKind(kind) {
   }
 
   if (kind === 'settings') {
-    drawer.open('settings', STRINGS.settingsTitle, async container => {
-      await renderSettingsDrawer(container, {
-        settings,
-        wakeLockSupported: wakeLock.isSupported,
-        onUpdateSettings: partial => {
-          settings = { ...settings, ...partial };
-          putSettings(settings);
-          applySettingsToView(engine.view, settings, currentBook?.dir || 'rtl');
-          wakeLock.setState({
-            enabled: settings.wakeLock,
-            activeReading: Boolean(currentBook),
-          });
-        },
-        onOpenBookmarks: () => openDrawerByKind('bookmarks'),
-        onClearAllData: async () => {
-          if (globalThis.confirm(STRINGS.confirmClearAll)) {
-            await clearBooks();
-            settings = { ...DEFAULT_SETTINGS };
+    drawer.open(
+      'settings',
+      STRINGS.settingsTitle,
+      async container => {
+        await renderSettingsDrawer(container, {
+          settings,
+          wakeLockSupported: wakeLock.isSupported,
+          onUpdateSettings: partial => {
+            settings = { ...settings, ...partial };
             putSettings(settings);
-            applyThemeToDocument(settings);
-            drawer.close();
-            showToast(STRINGS.dataClearedToast);
-            await showLibraryView();
-          }
-        },
-      });
-    });
+            applySettingsToView(engine.view, settings, currentBook?.dir || 'rtl');
+            wakeLock.setState({
+              enabled: settings.wakeLock,
+              activeReading: Boolean(currentBook),
+            });
+          },
+          onOpenBookmarks: () => openDrawerByKind('bookmarks', triggerEl),
+          onClearAllData: async () => {
+            if (globalThis.confirm(STRINGS.confirmClearAll)) {
+              await clearBooks();
+              settings = { ...DEFAULT_SETTINGS };
+              putSettings(settings);
+              applyThemeToDocument(settings);
+              drawer.close();
+              showToast(STRINGS.dataClearedToast);
+              await showLibraryView();
+            }
+          },
+        });
+      },
+      { triggerEl },
+    );
   }
 }
 
@@ -641,6 +1116,14 @@ function openDrawerByKind(kind) {
  * Keyboard handler for reading navigation.
  */
 function handleReaderKeydown(event) {
+  if (!$('#image-viewer')?.hidden) {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      closeImageViewer();
+    }
+    return;
+  }
   if (drawer.isOpen) return;
   if ($('#reader')?.hidden) return;
 
@@ -719,13 +1202,17 @@ export async function initApp() {
     }
   });
 
-  // Reader Topbar & Drawer controls
+  // Reader Topbar / Bottom Bar & Drawer controls
+  syncResponsiveToolbar();
+  initImageViewerControls();
+  bindSurfaceInteractions($('#view'), document);
+
   $('#back')?.addEventListener('click', () => showLibraryView());
-  $('#toc-btn')?.addEventListener('click', () => openDrawerByKind('toc'));
-  $('#bookmarks-btn')?.addEventListener('click', () => openDrawerByKind('bookmarks'));
-  $('#search-btn')?.addEventListener('click', () => openDrawerByKind('search'));
-  $('#settings-btn')?.addEventListener('click', () => openDrawerByKind('settings'));
-  $('#library-settings')?.addEventListener('click', () => openDrawerByKind('settings'));
+  $('#toc-btn')?.addEventListener('click', e => openDrawerByKind('toc', e.currentTarget));
+  $('#bookmarks-btn')?.addEventListener('click', e => openDrawerByKind('bookmarks', e.currentTarget));
+  $('#search-btn')?.addEventListener('click', e => openDrawerByKind('search', e.currentTarget));
+  $('#settings-btn')?.addEventListener('click', e => openDrawerByKind('settings', e.currentTarget));
+  $('#library-settings')?.addEventListener('click', e => openDrawerByKind('settings', e.currentTarget));
 
   // Bookmark toggle button
   $('#bookmark-btn')?.addEventListener('click', () => {
@@ -741,10 +1228,29 @@ export async function initApp() {
     updateBookmarkButton($('#bookmark-btn'), currentState, loc.cfi);
   });
 
-  // Tap Zones
-  $('.tap.next')?.addEventListener('click', () => engine.next());
-  $('.tap.prev')?.addEventListener('click', () => engine.prev());
-  $('.tap.centre')?.addEventListener('click', toggleChrome);
+  // Keyboard-accessible / assistive Tap Zone buttons
+  $('.tap.next')?.addEventListener('click', e => {
+    e.stopPropagation();
+    engine.next();
+  });
+  $('.tap.prev')?.addEventListener('click', e => {
+    e.stopPropagation();
+    engine.prev();
+  });
+  $('.tap.centre')?.addEventListener('click', e => {
+    e.stopPropagation();
+    toggleChrome();
+  });
+
+  // Debounced viewport / orientation resize handler: sync toolbar and preserve exact CFI position
+  globalThis.addEventListener('resize', () => {
+    syncResponsiveToolbar();
+    if ($('#reader')?.hidden || !currentBook) return;
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      engine.restoreStablePosition();
+    }, 50);
+  });
 
   // Progress bar slider & Go-to-% input
   $('#progress')?.addEventListener('input', e => {

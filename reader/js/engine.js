@@ -62,11 +62,22 @@ export class ReaderEngine {
     this.#navChain = Promise.resolve();
     this.#boundRelocate = this.#handleRelocate.bind(this);
     this.#boundLoad = this.#handleLoad.bind(this);
+    this.#boundSwipeTurn = this.#handleSwipeTurn.bind(this);
   }
 
   #navChain;
   #boundRelocate;
   #boundLoad;
+  #boundSwipeTurn;
+  #navBusy = 0;
+  #stablePosition = null;
+  #isRestoringResize = false;
+
+  #handleSwipeTurn(event) {
+    const dir = event?.detail?.dir;
+    if (dir === 1) this.next();
+    else if (dir === -1) this.prev();
+  }
 
   /**
    * Lazy-load the foliate-js custom element module only when opening a book.
@@ -97,6 +108,7 @@ export class ReaderEngine {
     this.book.dir = this.dir;
     if (this.view.renderer) {
       this.view.renderer.bookDir = this.dir;
+      this.view.renderer.addEventListener('swipe-turn', this.#boundSwipeTurn);
     }
 
     const title = formatMetadataValue(this.book.metadata?.title) || file.name || STRINGS.untitledBook;
@@ -147,12 +159,14 @@ export class ReaderEngine {
     if (!this.view) return;
     this.view.removeEventListener('relocate', this.#boundRelocate);
     this.view.removeEventListener('load', this.#boundLoad);
+    this.view.renderer?.removeEventListener?.('swipe-turn', this.#boundSwipeTurn);
     try {
       this.view.close?.();
     } catch {
       // Ignore close errors
     }
     this.book = null;
+    this.#stablePosition = null;
   }
 
   #getLinearIndices() {
@@ -287,7 +301,39 @@ export class ReaderEngine {
     if (this.view?.lastLocation) {
       this.view.lastLocation.fraction = normalizedFraction;
     }
+    if (!this.#isRestoringResize && loc.reason !== 'anchor' && loc.cfi) {
+      this.#stablePosition = {
+        cfi: loc.cfi,
+        fraction: normalizedFraction,
+        sectionIndex: loc.section?.current ?? this.#getCurrentSectionIndex(),
+      };
+    } else if (!this.#stablePosition && loc.cfi) {
+      this.#stablePosition = {
+        cfi: loc.cfi,
+        fraction: normalizedFraction,
+        sectionIndex: loc.section?.current ?? this.#getCurrentSectionIndex(),
+      };
+    }
     this.onRelocate?.(loc);
+  }
+
+  /**
+   * Restore the exact pre-resize CFI position after an orientation change or viewport resize settles.
+   */
+  async restoreStablePosition() {
+    if (!this.view?.book || !this.#stablePosition?.cfi) return;
+    const targetCfi = this.#stablePosition.cfi;
+    this.#isRestoringResize = true;
+    try {
+      this.view.renderer?.finishAnimation?.();
+      this.view.renderer?.render?.();
+      await this.view.goTo(targetCfi);
+      await nextFrame();
+    } catch {
+      // Ignore transient resize navigation errors
+    } finally {
+      this.#isRestoringResize = false;
+    }
   }
 
   #handleLoad(event) {
@@ -340,9 +386,16 @@ export class ReaderEngine {
    * jumps to the next linear section; at the end of the book, ensures 100% and is a safe no-op.
    */
   next() {
+    if (this.#navBusy > 0) {
+      this.view?.renderer?.finishAnimation?.();
+    }
+    this.#navBusy++;
     this.#navChain = this.#navChain
       .then(() => this.#performNext())
-      .catch(err => console.warn('Navigation next warning:', err));
+      .catch(err => console.warn('Navigation next warning:', err))
+      .finally(() => {
+        this.#navBusy = Math.max(0, this.#navBusy - 1);
+      });
     return this.#navChain;
   }
 
@@ -416,9 +469,16 @@ export class ReaderEngine {
    * Serialized and defensive: if at the start of a section, jumps to the end of the previous linear section.
    */
   prev() {
+    if (this.#navBusy > 0) {
+      this.view?.renderer?.finishAnimation?.();
+    }
+    this.#navBusy++;
     this.#navChain = this.#navChain
       .then(() => this.#performPrev())
-      .catch(err => console.warn('Navigation prev warning:', err));
+      .catch(err => console.warn('Navigation prev warning:', err))
+      .finally(() => {
+        this.#navBusy = Math.max(0, this.#navBusy - 1);
+      });
     return this.#navChain;
   }
 

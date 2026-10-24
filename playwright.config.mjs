@@ -1,4 +1,4 @@
-import { defineConfig } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests',
@@ -30,6 +30,20 @@ export default defineConfig({
       use: {
         browserName: 'chromium',
         viewport: { width: 1280, height: 800 },
+      },
+    },
+    {
+      name: 'iPhone 14',
+      use: {
+        ...devices['iPhone 14'],
+        browserName: 'chromium',
+      },
+    },
+    {
+      name: 'Pixel 7',
+      use: {
+        ...devices['Pixel 7'],
+        browserName: 'chromium',
       },
     },
   ],

@@ -1,1 +1,2 @@
 foliate-js @ 78914aef4466eb960965702401634c2cb348e9b1 (2026-05-01), MIT, https://github.com/johnfactotum/foliate-js
+PATCHED locally for epub.co.il (mobile gestures: axis lock, edge-swipe guard, long-press/selection guard, velocity/distance snap thresholds, section-boundary crossing, scrolled-mode horizontal swipe, FXL pinch/swipe). See git history of reader/vendor/foliate-js.

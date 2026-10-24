@@ -10,6 +10,8 @@ const FOCUSABLE_SELECTOR =
  * - Closes on Escape or backdrop click and restores focus to the opener button
  */
 export class DrawerController {
+  #sheetDrag = null;
+
   constructor({ drawerEl, titleEl, contentEl, closeBtnEl, backdropEl }) {
     this.drawerEl = drawerEl;
     this.titleEl = titleEl;
@@ -22,18 +24,81 @@ export class DrawerController {
 
     this.closeBtnEl?.addEventListener('click', () => this.close());
     this.backdropEl?.addEventListener('click', () => this.close());
+    this.backdropEl?.addEventListener('touchend', e => {
+      if (e.cancelable) e.preventDefault();
+      this.close();
+    });
     document.addEventListener('keydown', this.#handleKeydown.bind(this));
+    this.#bindSheetSwipeToDismiss();
+  }
+
+  #bindSheetSwipeToDismiss() {
+    if (!this.drawerEl) return;
+    const handleZone = e =>
+      e.target?.closest?.('.drawer-grab-handle, .drawer-header') &&
+      !e.target?.closest?.('button');
+
+    this.drawerEl.addEventListener(
+      'touchstart',
+      e => {
+        if (!this.isOpen || !handleZone(e) || e.touches.length !== 1) return;
+        const t = e.changedTouches[0];
+        this.#sheetDrag = {
+          startY: t.screenY,
+          dy: 0,
+          startTime: e.timeStamp || performance.now(),
+        };
+        this.drawerEl.style.transition = 'none';
+      },
+      { passive: true },
+    );
+
+    this.drawerEl.addEventListener(
+      'touchmove',
+      e => {
+        if (!this.#sheetDrag || e.touches.length !== 1) return;
+        const t = e.changedTouches[0];
+        const dy = Math.max(0, t.screenY - this.#sheetDrag.startY);
+        this.#sheetDrag.dy = dy;
+        if (dy > 0) {
+          if (e.cancelable) e.preventDefault();
+          this.drawerEl.style.transform = `translateY(${dy}px)`;
+        }
+      },
+      { passive: false },
+    );
+
+    const finishSheetDrag = e => {
+      if (!this.#sheetDrag) return;
+      const { dy, startTime } = this.#sheetDrag;
+      this.#sheetDrag = null;
+      this.drawerEl.style.transition = '';
+      this.drawerEl.style.transform = '';
+      const dt = Math.max(1, (e?.timeStamp || performance.now()) - startTime);
+      const vy = dy / dt;
+      if (dy > 56 || (dy > 24 && vy > 0.45)) {
+        this.close();
+      }
+    };
+
+    this.drawerEl.addEventListener('touchend', finishSheetDrag, { passive: true });
+    this.drawerEl.addEventListener('touchcancel', finishSheetDrag, { passive: true });
   }
 
   get isOpen() {
     return Boolean(this.drawerEl && !this.drawerEl.hidden);
   }
 
-  open(kind, title, renderFn, { onClose } = {}) {
+  open(kind, title, renderFn, { onClose, triggerEl } = {}) {
     if (!this.isOpen) {
-      this.lastFocused = document.activeElement;
+      this.lastFocused =
+        triggerEl ||
+        (document.activeElement && document.activeElement !== document.body
+          ? document.activeElement
+          : null);
     } else if (this.onCloseCallback) {
       this.onCloseCallback();
+      if (triggerEl) this.lastFocused = triggerEl;
     }
 
     this.currentKind = kind;
@@ -42,6 +107,8 @@ export class DrawerController {
       this.titleEl.textContent = title;
     }
 
+    this.drawerEl.style.transform = '';
+    this.drawerEl.style.transition = '';
     this.backdropEl.hidden = false;
     this.drawerEl.hidden = false;
 
@@ -58,6 +125,9 @@ export class DrawerController {
 
   close() {
     if (!this.isOpen) return;
+    this.#sheetDrag = null;
+    this.drawerEl.style.transform = '';
+    this.drawerEl.style.transition = '';
     this.drawerEl.hidden = true;
     this.backdropEl.hidden = true;
     this.currentKind = null;
@@ -68,14 +138,15 @@ export class DrawerController {
       cb();
     }
 
-    if (this.lastFocused && typeof this.lastFocused.focus === 'function') {
+    const toFocus = this.lastFocused;
+    this.lastFocused = null;
+    if (toFocus && typeof toFocus.focus === 'function') {
       try {
-        this.lastFocused.focus();
+        toFocus.focus();
       } catch {
         // Ignore focus errors if element was detached
       }
     }
-    this.lastFocused = null;
   }
 
   #handleKeydown(event) {

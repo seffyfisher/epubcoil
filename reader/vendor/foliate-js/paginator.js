@@ -16,22 +16,38 @@ const debounce = (f, wait, immediate) => {
 
 const lerp = (min, max, x) => x * (max - min) + min
 const easeOutQuad = x => 1 - (1 - x) * (1 - x)
-const animate = (a, b, duration, ease, render) => new Promise(resolve => {
+const animate = (a, b, duration, ease, render, setCancel, onDone) => new Promise(resolve => {
     let start
+    let finished = false
+    const finish = () => {
+        if (finished) return
+        finished = true
+        setCancel?.(null)
+        render(lerp(a, b, 1))
+        onDone?.()
+        resolve()
+    }
+    setCancel?.(finish)
     const step = now => {
+        if (finished) return
         if (document.hidden) {
-            render(lerp(a, b, 1))
-            return resolve()
+            finish()
+            return
         }
         start ??= now
         const fraction = Math.min(1, (now - start) / duration)
         render(lerp(a, b, ease(fraction)))
         if (fraction < 1) requestAnimationFrame(step)
-        else resolve()
+        else {
+            finished = true
+            setCancel?.(null)
+            onDone?.()
+            resolve()
+        }
     }
     if (document.hidden) {
-        render(lerp(a, b, 1))
-        return resolve()
+        finish()
+        return
     }
     requestAnimationFrame(step)
 })
@@ -255,6 +271,7 @@ class View {
         return new Promise(resolve => {
             this.#iframe.addEventListener('load', () => {
                 const doc = this.document
+                if (doc) doc.__hostFrame = this.#iframe
                 afterLoad?.(doc)
 
                 // it needs to be visible for Firefox to get computed style
@@ -269,7 +286,9 @@ class View {
                 this.#contentRange.selectNodeContents(doc.body)
                 const layout = beforeRender?.({ vertical, rtl, background })
                 this.#iframe.style.display = 'block'
+                this.suppressExpand = true
                 this.render(layout)
+                this.suppressExpand = false
                 this.#observer.observe(doc.body)
 
                 // the resize observer above doesn't work in Firefox
@@ -371,7 +390,7 @@ class View {
             const contentStart = this.#vertical ? 0
                 : this.#rtl ? rootRect.right - contentRect.right : contentRect.left - rootRect.left
             const contentSize = contentStart + contentRect[side]
-            const pageCount = Math.ceil(contentSize / this.#size)
+            const pageCount = Math.max(1, Math.ceil((contentSize - 1) / this.#size))
             const expandedSize = pageCount * this.#size
             this.#element.style.padding = '0'
             this.#iframe.style[side] = `${expandedSize}px`
@@ -406,7 +425,7 @@ class View {
                 this.#overlayer.redraw()
             }
         }
-        this.onExpand()
+        if (!this.suppressExpand) this.onExpand()
     }
     set overlayer(overlayer) {
         this.#overlayer = overlayer
@@ -449,6 +468,11 @@ export class Paginator extends HTMLElement {
     #touchState
     #touchScrolled
     #lastVisibleRange
+    #cancelAnimation
+    #longPressTimer
+    finishAnimation() {
+        this.#cancelAnimation?.()
+    }
     constructor() {
         super()
         this.#root.innerHTML = `<style>
@@ -564,14 +588,17 @@ export class Paginator extends HTMLElement {
             }
         }, 250))
 
-        const opts = { passive: false }
-        this.addEventListener('touchstart', this.#onTouchStart.bind(this), opts)
-        this.addEventListener('touchmove', this.#onTouchMove.bind(this), opts)
-        this.addEventListener('touchend', this.#onTouchEnd.bind(this))
+        const passiveOpts = { passive: true }
+        const activeOpts = { passive: false }
+        this.addEventListener('touchstart', this.#onTouchStart.bind(this), passiveOpts)
+        this.addEventListener('touchmove', this.#onTouchMove.bind(this), activeOpts)
+        this.addEventListener('touchend', this.#onTouchEnd.bind(this), passiveOpts)
+        this.addEventListener('touchcancel', this.#onTouchEnd.bind(this), passiveOpts)
         this.addEventListener('load', ({ detail: { doc } }) => {
-            doc.addEventListener('touchstart', this.#onTouchStart.bind(this), opts)
-            doc.addEventListener('touchmove', this.#onTouchMove.bind(this), opts)
-            doc.addEventListener('touchend', this.#onTouchEnd.bind(this))
+            doc.addEventListener('touchstart', this.#onTouchStart.bind(this), passiveOpts)
+            doc.addEventListener('touchmove', this.#onTouchMove.bind(this), activeOpts)
+            doc.addEventListener('touchend', this.#onTouchEnd.bind(this), passiveOpts)
+            doc.addEventListener('touchcancel', this.#onTouchEnd.bind(this), passiveOpts)
         })
 
         this.addEventListener('relocate', ({ detail }) => {
@@ -682,7 +709,7 @@ export class Paginator extends HTMLElement {
 
         // set background to `doc` background
         // this is needed because the iframe does not fill the whole element
-        this.#background.style.background = background
+        if (background) this.#background.style.background = background
 
         const { width, height } = this.#container.getBoundingClientRect()
         const size = vertical ? height : width
@@ -794,6 +821,10 @@ export class Paginator extends HTMLElement {
         const delta = this.#vertical ? dy : dx
         const element = this.#container
         const { scrollProp } = this
+        if (!this.#scrollBounds) {
+            const size = this.size
+            this.#scrollBounds = [element[scrollProp], this.atStart ? 0 : size, this.atEnd ? 0 : size]
+        }
         const [offset, a, b] = this.#scrollBounds
         const rtl = this.#rtl
         const min = rtl ? offset - b : offset - a
@@ -801,66 +832,234 @@ export class Paginator extends HTMLElement {
         element[scrollProp] = Math.max(min, Math.min(max,
             element[scrollProp] + delta))
     }
-    snap(vx, vy) {
-        const velocity = this.#vertical ? vy : vx
+    snap(vx, vy, state = this.#touchState) {
+        const size = state?.size || this.size
+        if (!size) return Promise.resolve()
+        if (!this.#scrollBounds) {
+            this.#scrollBounds = [
+                this.#container[this.scrollProp],
+                this.atStart ? 0 : size,
+                this.atEnd ? 0 : size,
+            ]
+        }
         const [offset, a, b] = this.#scrollBounds
-        const { start, end, pages, size } = this
-        const min = Math.abs(offset) - a
-        const max = Math.abs(offset) + b
-        const d = velocity * (this.#rtl ? -size : size)
-        const page = Math.floor(
-            Math.max(min, Math.min(max, (start + end) / 2
-                + (isNaN(d) ? 0 : d))) / size)
+        const { start, pages } = this
+        const baseOffset = Math.abs(offset)
+        const startPage = state?.startPage ?? Math.round(baseOffset / size)
+        const minPage = Math.max(0, Math.round((baseOffset - a) / size))
+        const maxPage = Math.min(pages - 1, Math.round((baseOffset + b) / size))
 
-        this.#scrollToPage(page, 'snap').then(() => {
-            const dir = page <= 0 ? -1 : page >= pages - 1 ? 1 : null
-            if (dir) return this.#goTo({
-                index: this.#adjacentIndex(dir),
-                anchor: dir < 0 ? () => 1 : () => 0,
-            })
-        })
+        const rawDelta = state
+            ? (this.#vertical ? state.totalDy : state.totalDx)
+            : (this.#rtl ? -(start - baseOffset) : (start - baseOffset))
+        const signedDelta = this.#rtl ? -rawDelta : rawDelta
+        const rawVel = this.#vertical ? vy : vx
+        const signedVel = (this.#rtl ? -rawVel : rawVel) || 0
+
+        const dragFraction = Math.abs(signedDelta) / size
+        const isFling = Math.abs(signedVel) >= 0.35 &&
+            Math.abs(signedDelta) >= 24 &&
+            Math.sign(signedVel) === Math.sign(signedDelta)
+        const isDistanceTurn = dragFraction >= 0.18
+
+        let page = startPage
+        if (isDistanceTurn || isFling) {
+            const turnDir = signedDelta > 0 ? 1 : -1
+            page = Math.max(minPage, Math.min(maxPage, startPage + turnDir))
+        }
+
+        const dir = page <= 0 ? -1 : page >= pages - 1 ? 1 : null
+        const adj = dir ? this.#adjacentIndex(dir) : null
+        if (adj != null) {
+            this.#locked = true
+            return this.#scrollToPage(page, 'snap')
+                .then(() => this.#goTo({
+                    index: adj,
+                    anchor: dir < 0 ? () => 1 : () => 0,
+                }))
+                .finally(() => {
+                    this.#locked = false
+                })
+        }
+        return this.#scrollToPage(page, 'snap')
+    }
+    #getHostTouchX(touch, e) {
+        if (!touch) return 0
+        const targetDoc = e.currentTarget?.nodeType === 9 ? e.currentTarget : null
+        if (targetDoc) {
+            const frame = targetDoc.__hostFrame || targetDoc.defaultView?.frameElement
+            if (frame) {
+                const rect = frame.getBoundingClientRect()
+                return rect.left + touch.clientX
+            }
+        }
+        return touch.clientX ?? touch.screenX ?? 0
+    }
+    #hasActiveSelection() {
+        const sel = this.#view?.document?.getSelection?.()
+        return Boolean(sel && !sel.isCollapsed && sel.toString().trim().length > 0)
+    }
+    #clearLongPressTimer() {
+        if (this.#longPressTimer) {
+            clearTimeout(this.#longPressTimer)
+            this.#longPressTimer = null
+        }
     }
     #onTouchStart(e) {
-        const touch = e.changedTouches[0]
-        this.#touchState = {
-            x: touch?.screenX, y: touch?.screenY,
-            t: e.timeStamp,
-            vx: 0, xy: 0,
+        this.#clearLongPressTimer()
+        if (this.#cancelAnimation) this.finishAnimation()
+        if (this.#locked) {
+            this.#touchState = null
+            return
         }
+        if (e.touches.length > 1) {
+            if (this.#touchState) this.#touchState.pinched = true
+            return
+        }
+        const touch = e.changedTouches[0]
+        if (!touch) return
+        const size = this.size
+        if (!this.#scrollBounds && size > 0) {
+            this.#scrollBounds = [
+                this.#container[this.scrollProp],
+                this.atStart ? 0 : size,
+                this.atEnd ? 0 : size,
+            ]
+        }
+        const hostRect = this.getBoundingClientRect()
+        const hostX = this.#getHostTouchX(touch, e)
+        const relX = hostX - hostRect.left
+        const edgeSwipe = hostRect.width > 0 && (relX < 20 || relX > hostRect.width - 20)
+        const startOffset = this.#scrollBounds?.[0] ?? this.#container[this.scrollProp]
+        const startPage = size > 0 ? Math.round(Math.abs(startOffset) / size) : this.page
+        const now = e.timeStamp || performance.now()
+
+        this.#touchState = {
+            startX: touch.screenX,
+            startY: touch.screenY,
+            x: touch.screenX,
+            y: touch.screenY,
+            t: now,
+            vx: 0,
+            vy: 0,
+            totalDx: 0,
+            totalDy: 0,
+            axis: null,
+            edgeSwipe,
+            selectionBlocked: this.#hasActiveSelection(),
+            longPress: false,
+            pinched: (globalThis.visualViewport?.scale ?? 1) > 1.01,
+            startPage,
+            size,
+            samples: [{ x: touch.screenX, y: touch.screenY, t: now }],
+        }
+        this.#touchScrolled = false
+
+        this.#longPressTimer = setTimeout(() => {
+            if (this.#touchState && !this.#touchScrolled &&
+                Math.hypot(this.#touchState.totalDx, this.#touchState.totalDy) < 10) {
+                this.#touchState.longPress = true
+            }
+        }, 450)
     }
     #onTouchMove(e) {
         const state = this.#touchState
-        if (state.pinched) return
-        state.pinched = globalThis.visualViewport.scale > 1
-        if (this.scrolled || state.pinched) return
-        if (e.touches.length > 1) {
-            if (this.#touchScrolled) e.preventDefault()
+        if (!state || state.pinched) return
+        if ((globalThis.visualViewport?.scale ?? 1) > 1.01 || e.touches.length > 1) {
+            state.pinched = true
+            this.#clearLongPressTimer()
+            if (this.#touchScrolled && !this.scrolled) {
+                this.#touchScrolled = false
+                this.#scrollToPage(state.startPage, 'snap')
+            }
             return
         }
-        e.preventDefault()
+        if (state.edgeSwipe || state.selectionBlocked || state.longPress) return
+        if (this.#hasActiveSelection()) {
+            state.selectionBlocked = true
+            return
+        }
+
         const touch = e.changedTouches[0]
+        if (!touch) return
         const x = touch.screenX, y = touch.screenY
+        const now = e.timeStamp || performance.now()
         const dx = state.x - x, dy = state.y - y
-        const dt = e.timeStamp - state.t
+        const totalDx = state.startX - x, totalDy = state.startY - y
+
         state.x = x
         state.y = y
-        state.t = e.timeStamp
-        state.vx = dx / dt
-        state.vy = dy / dt
+        state.t = now
+        state.totalDx = totalDx
+        state.totalDy = totalDy
+
+        if (Math.hypot(totalDx, totalDy) >= 8) {
+            this.#clearLongPressTimer()
+        }
+
+        state.samples.push({ x, y, t: now })
+        while (state.samples.length > 2 && now - state.samples[0].t > 120) {
+            state.samples.shift()
+        }
+        const ref = state.samples[0]
+        const dt = Math.max(1, now - ref.t)
+        state.vx = (ref.x - x) / dt
+        state.vy = (ref.y - y) / dt
+
+        if (state.axis === null) {
+            if (Math.hypot(totalDx, totalDy) < 6) return
+            const primary = this.#vertical ? Math.abs(totalDy) : Math.abs(totalDx)
+            const secondary = this.#vertical ? Math.abs(totalDx) : Math.abs(totalDy)
+            state.axis = secondary > primary ? 'y' : 'x'
+        }
+
+        if (state.axis === 'y') return
+
+        if (this.scrolled) {
+            if (Math.abs(totalDx) > 14 && Math.abs(totalDx) > Math.abs(totalDy) * 1.4) {
+                if (e.cancelable) e.preventDefault()
+                this.#touchScrolled = true
+            }
+            return
+        }
+
+        if (e.cancelable) e.preventDefault()
         this.#touchScrolled = true
         this.scrollBy(dx, dy)
     }
-    #onTouchEnd() {
+    #onTouchEnd(e) {
+        this.#clearLongPressTimer()
+        const state = this.#touchState
+        const wasScrolled = this.#touchScrolled
         this.#touchScrolled = false
-        if (this.scrolled) return
+        if (!state) return
 
-        // XXX: Firefox seems to report scale as 1... sometimes...?
-        // at this point I'm basically throwing `requestAnimationFrame` at
-        // anything that doesn't work
-        requestAnimationFrame(() => {
-            if (globalThis.visualViewport.scale === 1)
-                this.snap(this.#touchState.vx, this.#touchState.vy)
-        })
+        const touch = e?.changedTouches?.[0]
+        if (touch) {
+            state.totalDx = state.startX - touch.screenX
+            state.totalDy = state.startY - touch.screenY
+        }
+
+        if (this.scrolled) {
+            if (wasScrolled && state.axis === 'x' && !state.pinched &&
+                !state.edgeSwipe && !state.selectionBlocked && !state.longPress &&
+                Math.abs(state.totalDx) > 60 && Math.abs(state.totalDx) > Math.abs(state.totalDy) * 1.5) {
+                const isRtl = this.bookDir === 'rtl' || this.#rtl
+                const dir = (isRtl ? -state.totalDx : state.totalDx) > 0 ? 1 : -1
+                this.dispatchEvent(new CustomEvent('swipe-turn', { detail: { dir } }))
+            }
+            return
+        }
+
+        if (!wasScrolled) return
+        if (state.pinched || state.edgeSwipe || state.selectionBlocked || state.longPress || state.axis !== 'x') {
+            this.#scrollToPage(state.startPage, 'snap')
+            return
+        }
+
+        if ((globalThis.visualViewport?.scale ?? 1) <= 1.01) {
+            this.snap(state.vx, state.vy, state)
+        }
     }
     // allows one to process rects as if they were LTR and horizontal
     #getRectMapper() {
@@ -888,32 +1087,40 @@ export class Paginator extends HTMLElement {
         const offset = this.#getRectMapper()(rect).left
         return this.#scrollToPage(Math.floor(offset / this.size) + (this.#rtl ? -1 : 1), reason)
     }
-    async #scrollTo(offset, reason, smooth) {
+    async #scrollTo(offset, reason, smooth, suppressRelocate = false) {
+        if (this.#cancelAnimation) this.finishAnimation()
         const element = this.#container
         const { scrollProp, size } = this
-        if (element[scrollProp] === offset) {
+        if (Math.abs(element[scrollProp] - offset) < 0.5) {
+            element[scrollProp] = offset
             this.#scrollBounds = [offset, this.atStart ? 0 : size, this.atEnd ? 0 : size]
-            this.#afterScroll(reason)
+            if (!suppressRelocate) this.#afterScroll(reason)
             return
         }
         // FIXME: vertical-rl only, not -lr
         if (this.scrolled && this.#vertical) offset = -offset
         if ((reason === 'snap' || smooth) && this.hasAttribute('animated')) return animate(
-            element[scrollProp], offset, 300, easeOutQuad,
+            element[scrollProp], offset, 110, easeOutQuad,
             x => element[scrollProp] = x,
-        ).then(() => {
-            this.#scrollBounds = [offset, this.atStart ? 0 : size, this.atEnd ? 0 : size]
-            this.#afterScroll(reason)
-        })
+            cancel => { this.#cancelAnimation = cancel },
+            () => {
+                this.#scrollBounds = [offset, this.atStart ? 0 : size, this.atEnd ? 0 : size]
+                if (!suppressRelocate) this.#afterScroll(reason)
+            },
+        )
         else {
             element[scrollProp] = offset
             this.#scrollBounds = [offset, this.atStart ? 0 : size, this.atEnd ? 0 : size]
-            this.#afterScroll(reason)
+            if (!suppressRelocate) this.#afterScroll(reason)
         }
     }
     async #scrollToPage(page, reason, smooth) {
         const offset = this.size * (this.#rtl ? -page : page)
-        return this.#scrollTo(offset, reason, smooth)
+        const isBufferPage = (reason === 'snap' || reason === 'page') && (
+            (page <= 0 && this.#adjacentIndex(-1) != null) ||
+            (page >= this.pages - 1 && this.#adjacentIndex(1) != null)
+        )
+        return this.#scrollTo(offset, reason, smooth, isBufferPage)
     }
     async scrollToAnchor(anchor, select) {
         return this.#scrollToAnchor(anchor, select ? 'selection' : 'navigation')
@@ -1058,16 +1265,26 @@ export class Paginator extends HTMLElement {
             if (this.sections[index]?.linear !== 'no') return index
     }
     async #turnPage(dir, distance) {
+        if (this.#cancelAnimation) this.finishAnimation()
         if (this.#locked) return
         this.#locked = true
-        const prev = dir === -1
-        const shouldGo = await (prev ? this.#scrollPrev(distance) : this.#scrollNext(distance))
-        if (shouldGo) await this.#goTo({
-            index: this.#adjacentIndex(dir),
-            anchor: prev ? () => 1 : () => 0,
-        })
-        if (shouldGo || !this.hasAttribute('animated')) await wait(100)
-        this.#locked = false
+        try {
+            const prev = dir === -1
+            const shouldGo = await (prev ? this.#scrollPrev(distance) : this.#scrollNext(distance))
+            if (shouldGo) {
+                const adj = this.#adjacentIndex(dir)
+                if (adj != null) {
+                    await this.#goTo({
+                        index: adj,
+                        anchor: prev ? () => 1 : () => 0,
+                    })
+                }
+            }
+            if (shouldGo) await wait(20)
+            else if (!this.hasAttribute('animated')) await wait(60)
+        } finally {
+            this.#locked = false
+        }
     }
     prev(distance) {
         return this.#turnPage(-1, distance)

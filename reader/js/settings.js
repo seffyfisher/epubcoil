@@ -153,6 +153,14 @@ export function applySettingsToView(view, settings, bookDir = 'rtl') {
   const maxCols = settings.columns === '1' ? '1' : '2';
   renderer.setAttribute('max-column-count', maxCols);
 
+  const prefersReducedMotion =
+    globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+  if (prefersReducedMotion) {
+    renderer.removeAttribute('animated');
+  } else {
+    renderer.setAttribute('animated', '');
+  }
+
   const chosenFontStack = FONT_STACK_MAP[settings.font] || null;
   const fontRule = chosenFontStack
     ? `html, body, p, li, div, blockquote, dd, dt, span { font-family: ${chosenFontStack} !important; }`
