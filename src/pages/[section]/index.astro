@@ -1,4 +1,5 @@
 ---
+import { inlineMarkup } from "../../lib/links";
 import { getCollection } from "astro:content";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { articlePath } from "../../lib/links";
@@ -37,7 +38,7 @@ const intro = `כאן נאספים מאמרים על ${sectionMap[section]}. כ�
             <h2>
               <a href={articlePath(article)}>{article.data.title}</a>
             </h2>
-            <p>{article.data.answer}</p>
+            <p set:html={inlineMarkup(article.data.answer)} />
             <p class="entry-meta">
               <time datetime={article.data.updated.toISOString()}>
                 {formatHebrewDate(article.data.updated)}

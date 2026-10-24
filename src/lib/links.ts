@@ -16,3 +16,13 @@ export function existingRelated(
   );
   return references.flatMap((reference) => lookup.get(reference) ?? []);
 }
+
+/** Escape plain frontmatter text and render `code` spans (for answers/descriptions). */
+export function inlineMarkup(text: string): string {
+  const escaped = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+  return escaped.replace(/`([^`]+)`/g, '<code dir="ltr">$1</code>');
+}

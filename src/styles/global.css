@@ -10,23 +10,7 @@
   font-family: "Noto Hebrew";
   src: url("/noto-sans-hebrew-latin.woff2") format("woff2");
   font-display: swap;
-  font-weight: 400;
-  unicode-range: U+0000-00FF;
-}
-
-@font-face {
-  font-family: "Frank Ruhl";
-  src: url("/frank-ruhl-libre.woff2") format("woff2");
-  font-display: swap;
-  font-weight: 300 900;
-  unicode-range: U+0590-05FF, U+FB1D-FB4F;
-}
-
-@font-face {
-  font-family: "Frank Ruhl";
-  src: url("/frank-ruhl-libre-latin.woff2") format("woff2");
-  font-display: swap;
-  font-weight: 500;
+  font-weight: 100 900;
   unicode-range: U+0000-00FF;
 }
 
@@ -147,11 +131,20 @@ button {
   text-decoration: none;
   white-space: nowrap;
 }
+/* One sans family; hierarchy comes from size, weight and spacing. */
 .brand bdi,
 h1,
 h2,
 h3 {
-  font-family: "Frank Ruhl", Georgia, serif;
+  font-family: "Noto Hebrew", system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.012em;
+}
+h2 {
+  font-weight: 650;
+}
+h3 {
+  font-weight: 600;
 }
 .brand bdi {
   font-size: clamp(1.45rem, 2.5vw, 1.9rem);
@@ -275,9 +268,10 @@ p {
 .lede {
   max-inline-size: 60ch;
   color: var(--muted);
-  font-family: "Frank Ruhl", Georgia, serif;
-  font-size: clamp(1.25rem, 2.2vw, 1.55rem);
+  font-family: "Noto Hebrew", system-ui, sans-serif;
+  font-size: clamp(1.15rem, 2vw, 1.35rem);
   line-height: 1.5;
+  font-weight: 400;
 }
 .meta-line,
 .meta {
@@ -352,9 +346,9 @@ p {
   text-decoration: none;
 }
 .section-index strong {
-  font-family: "Frank Ruhl", Georgia, serif;
-  font-size: 1.2rem;
-  font-weight: 500;
+  font-family: "Noto Hebrew", system-ui, sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 .section-index span,
 .section-index small {
@@ -443,8 +437,9 @@ p {
   display: flex;
   align-items: center;
   cursor: pointer;
-  font-family: "Frank Ruhl", Georgia, serif;
-  font-size: 1.15rem;
+  font-family: "Noto Hebrew", system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
 }
 .toc ol {
   margin: 0.45rem 0 0;
@@ -457,9 +452,10 @@ p {
   margin-block-end: 2.25rem;
   padding: 0.2rem 0 0.15rem 1.25rem;
   border-inline-start: 3px solid var(--accent);
-  font-family: "Frank Ruhl", Georgia, serif;
-  font-size: 1.3rem;
-  line-height: 1.55;
+  font-family: "Noto Hebrew", system-ui, sans-serif;
+  font-size: 1.12rem;
+  line-height: 1.7;
+  font-weight: 500;
 }
 .answer-box p:last-child {
   margin-block-end: 0.7rem;
@@ -501,10 +497,10 @@ p {
   padding-inline: 1.25rem 0;
   border-inline-start: 2px solid var(--rule);
   color: var(--muted);
-  font-family: "Frank Ruhl", Georgia, serif;
-  font-size: 1.25rem;
+  font-family: "Noto Hebrew", system-ui, sans-serif;
+  font-size: 1.1rem;
 }
-.prose :not(pre) > code {
+:not(pre) > code {
   /* Isolate LTR tokens (attributes, property names) inside Hebrew lines. */
   direction: ltr;
   unicode-bidi: isolate;
@@ -556,8 +552,9 @@ p {
   align-items: center;
   cursor: pointer;
   padding-block: 0.75rem;
-  font-family: "Frank Ruhl", Georgia, serif;
-  font-size: 1.2rem;
+  font-family: "Noto Hebrew", system-ui, sans-serif;
+  font-size: 1.05rem;
+  font-weight: 600;
 }
 .faq p {
   padding-inline: 0.5rem;

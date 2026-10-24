@@ -6,7 +6,7 @@ import satori from "satori";
 export const getStaticPaths = () => [{ params: { slug: "brand" } }];
 export const GET: APIRoute = async () => {
   const font = await readFile(
-    `${process.cwd()}/src/assets/og-fonts/FrankRuhlLibre-Regular.ttf`,
+    `${process.cwd()}/src/assets/og-fonts/NotoSansHebrew-SemiBold-subset.ttf`,
   );
   const svg = await satori(
     {
@@ -21,8 +21,8 @@ export const GET: APIRoute = async () => {
           alignItems: "center",
           background: "#fdfcfa",
           color: "#1a1a1a",
-          fontSize: 86,
-          fontFamily: "Frank",
+          fontSize: 80,
+          fontFamily: "Noto Sans Hebrew",
         },
         children: [
           { type: "div", props: { children: "epub.co.il" } },
@@ -44,7 +44,7 @@ export const GET: APIRoute = async () => {
     {
       width: 1200,
       height: 630,
-      fonts: [{ name: "Frank", data: font, weight: 400, style: "normal" }],
+      fonts: [{ name: "Noto Sans Hebrew", data: font, weight: 600, style: "normal" }],
     },
   );
   return new Response(new Resvg(svg).render().asPng(), {

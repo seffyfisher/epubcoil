@@ -104,4 +104,3 @@ export const plannedTopics: Record<SectionKey, string[]> = {
 };
 export const titleForSlug = (slug: string) => slug.replaceAll("-", " ");
 export const articleSlug = (id: string) => id.split("/").at(-1)!;
-export const issueUrl = "https://github.com/seffyfisher/epubcoil/issues/new";

@@ -1,6 +1,5 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { issueUrl } from "../lib/sections";
 ---
 
 <BaseLayout
@@ -13,8 +12,10 @@ import { issueUrl } from "../lib/sections";
     </p><h2>איך בודקים תוכן</h2><p>
       העדיפות היא למקורות ראשוניים. כל מאמר מפרט את מקורותיו ואת תאריך העדכון
       שלו.
-    </p><h2>תיקונים והצעות</h2><p>
-      אפשר <a href={issueUrl}>להציע תיקון ב־GitHub</a>.
+    </p><p>
+      טענה שלא הצלחנו לאמת עד הסוף לא מתפרסמת כעובדה: היא מנוסחת בזהירות ונבדקת
+      שוב מול המקור. רשימות המשאבים נבדקות מול האתרים עצמם, ולכל פריט מופיע
+      תאריך הבדיקה האחרון.
     </p>
   </section></BaseLayout
 >

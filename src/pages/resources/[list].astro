@@ -2,7 +2,6 @@
 import { getCollection } from "astro:content";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { formatHebrewDate } from "../../lib/dates";
-import { issueUrl } from "../../lib/sections";
 const labels = {
   links: "קישורים",
   software: "תוכנות",
@@ -60,8 +59,7 @@ const tags = (data: any) =>
     {
       list === "providers" ? (
         <p class="notice">
-          רשימה אינפורמטיבית בלבד, לא המלצה ולא שיתוף פעולה; הסדר אינו מדרג.{" "}
-          <a href={issueUrl}>הוספה או תיקון של רישום</a>
+          רשימה אינפורמטיבית בלבד, לא המלצה ולא שיתוף פעולה; הסדר אינו מדרג.
         </p>
       ) : null
     }{
@@ -87,8 +85,6 @@ const tags = (data: any) =>
           ))}
         </section>
       ))
-    }{items.length === 0 ? <p>הרשימה בהכנה.</p> : null}<p>
-      <a href={issueUrl}>הציעו פריט</a>
-    </p>
+    }{items.length === 0 ? <p>הרשימה בהכנה.</p> : null}
   </section></BaseLayout
 >

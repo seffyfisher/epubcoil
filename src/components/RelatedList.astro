@@ -1,5 +1,5 @@
 ---
-import { articlePath } from "../lib/links";
+import { articlePath, inlineMarkup } from "../lib/links";
 
 const { items } = Astro.props;
 ---
@@ -12,7 +12,7 @@ const { items } = Astro.props;
     items.map((item) => (
       <a href={articlePath(item)}>
         <strong>{item.data.title}</strong>
-        <span>{item.data.answer}</span>
+        <span set:html={inlineMarkup(item.data.answer)} />
       </a>
     ))
   }
