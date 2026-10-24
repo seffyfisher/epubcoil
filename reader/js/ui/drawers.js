@@ -28,6 +28,14 @@ export class DrawerController {
       if (e.cancelable) e.preventDefault();
       this.close();
     });
+    document.addEventListener('click', e => {
+      if (!this.isOpen || this.currentKind !== 'settings') return;
+      const target = e.target;
+      if (!(target instanceof Node)) return;
+      if (this.drawerEl.contains(target)) return;
+      if (target.closest?.('#settings-btn, #library-settings')) return;
+      this.close();
+    });
     document.addEventListener('keydown', this.#handleKeydown.bind(this));
     this.#bindSheetSwipeToDismiss();
   }
@@ -58,11 +66,13 @@ export class DrawerController {
       e => {
         if (!this.#sheetDrag || e.touches.length !== 1) return;
         const t = e.changedTouches[0];
-        const dy = Math.max(0, t.screenY - this.#sheetDrag.startY);
-        this.#sheetDrag.dy = dy;
-        if (dy > 0) {
+        const rawDy = t.screenY - this.#sheetDrag.startY;
+        this.#sheetDrag.dy = rawDy;
+        if (rawDy > 0) {
           if (e.cancelable) e.preventDefault();
-          this.drawerEl.style.transform = `translateY(${dy}px)`;
+          this.drawerEl.style.transform = `translateY(${rawDy}px)`;
+        } else if (rawDy < 0 && this.currentKind === 'settings') {
+          if (e.cancelable) e.preventDefault();
         }
       },
       { passive: false },
@@ -78,11 +88,39 @@ export class DrawerController {
       const vy = dy / dt;
       if (dy > 56 || (dy > 24 && vy > 0.45)) {
         this.close();
+      } else if (dy < -48 && this.currentKind === 'settings') {
+        this.drawerEl.classList.add('is-expanded');
       }
     };
 
     this.drawerEl.addEventListener('touchend', finishSheetDrag, { passive: true });
     this.drawerEl.addEventListener('touchcancel', finishSheetDrag, { passive: true });
+
+    // Also support mouse drag on the grab handle (desktop & pointer devices)
+    this.drawerEl.addEventListener('pointerdown', e => {
+      if (e.pointerType === 'touch' || !this.isOpen || !handleZone(e)) return;
+      this.#sheetDrag = {
+        startY: e.screenY,
+        dy: 0,
+        startTime: e.timeStamp || performance.now(),
+        pointerId: e.pointerId,
+      };
+      this.drawerEl.style.transition = 'none';
+    });
+
+    globalThis.addEventListener('pointermove', e => {
+      if (!this.#sheetDrag || e.pointerType === 'touch') return;
+      const rawDy = e.screenY - this.#sheetDrag.startY;
+      this.#sheetDrag.dy = rawDy;
+      if (rawDy > 0) {
+        this.drawerEl.style.transform = `translateY(${rawDy}px)`;
+      }
+    });
+
+    globalThis.addEventListener('pointerup', e => {
+      if (!this.#sheetDrag || e.pointerType === 'touch') return;
+      finishSheetDrag(e);
+    });
   }
 
   get isOpen() {
@@ -107,9 +145,14 @@ export class DrawerController {
       this.titleEl.textContent = title;
     }
 
+    this.drawerEl.dataset.kind = kind || '';
+    this.drawerEl.classList.remove('is-expanded');
     this.drawerEl.style.transform = '';
     this.drawerEl.style.transition = '';
-    this.backdropEl.hidden = false;
+    if (this.backdropEl) {
+      this.backdropEl.dataset.kind = kind || '';
+      this.backdropEl.hidden = kind === 'settings';
+    }
     this.drawerEl.hidden = false;
 
     Promise.resolve(renderFn?.(this.contentEl)).then(() => {
@@ -128,8 +171,13 @@ export class DrawerController {
     this.#sheetDrag = null;
     this.drawerEl.style.transform = '';
     this.drawerEl.style.transition = '';
+    this.drawerEl.classList.remove('is-expanded');
+    delete this.drawerEl.dataset.kind;
     this.drawerEl.hidden = true;
-    this.backdropEl.hidden = true;
+    if (this.backdropEl) {
+      delete this.backdropEl.dataset.kind;
+      this.backdropEl.hidden = true;
+    }
     this.currentKind = null;
 
     if (this.onCloseCallback) {

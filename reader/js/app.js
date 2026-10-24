@@ -17,6 +17,7 @@ import {
 import {
   applyThemeToDocument,
   applySettingsToView,
+  getLayoutSignature,
   renderSettingsDrawer,
 } from './settings.js';
 import {
@@ -49,6 +50,8 @@ let chromeTimer = null;
 let liveTimer = null;
 let toastTimer = null;
 let resizeTimer = null;
+let settingsRelayoutTimer = null;
+let lastSettingsRelayoutAt = -1e9;
 let lastAttemptAction = null;
 let lastTouchTapTime = -1e9;
 let lastTapHandledAt = -1e9;
@@ -73,6 +76,7 @@ const engine = new ReaderEngine({
   viewElement: $('#view'),
   onRelocate: handleRelocate,
   onSectionLoad: handleSectionLoad,
+  onPageUpdate: pageInfo => updateReadingFooter(pageInfo),
 });
 
 /**
@@ -217,6 +221,51 @@ function setBookDir(dir) {
 }
 
 /**
+ * Update the subtle reading footer line (page X of Y, pages left in chapter, percent, chapter title)
+ * and apply visibility toggles from settings.
+ */
+function updateReadingFooter(pageInfo = engine.getPageInfo(), loc = engine.getLocation()) {
+  const footerEl = $('#reading-footer');
+  if (!footerEl) return;
+
+  const pageEl = $('#footer-page');
+  const pagesLeftEl = $('#footer-pages-left');
+  const percentEl = $('#footer-percent');
+  const chapterEl = $('#footer-chapter');
+
+  const fraction = Math.max(0, Math.min(1, Number(loc?.fraction) || 0));
+  const percent = fraction >= 1 ? 100 : Math.min(99, Math.floor(fraction * 100));
+  const sectionIdx = loc?.section?.current ?? pageInfo?.sectionIndex ?? 0;
+  const chapterTitle = loc?.tocItem?.label || STRINGS.chapterFallback(sectionIdx);
+
+  if (pageEl) {
+    pageEl.textContent = STRINGS.pageOfTotal(
+      pageInfo?.page ?? 1,
+      pageInfo?.totalPages ?? 1,
+      pageInfo?.isExact ?? true,
+    );
+    pageEl.hidden = !settings.footerPage;
+  }
+
+  if (pagesLeftEl) {
+    pagesLeftEl.textContent = STRINGS.pagesLeftInChapter(
+      pageInfo?.pagesLeftInChapter ?? 0,
+    );
+    pagesLeftEl.hidden = !settings.footerPagesLeft;
+  }
+
+  if (percentEl) {
+    percentEl.textContent = `${percent}%`;
+    percentEl.hidden = !settings.footerPercent;
+  }
+
+  if (chapterEl) {
+    chapterEl.textContent = chapterTitle;
+    chapterEl.hidden = !settings.footerChapter;
+  }
+}
+
+/**
  * Handle `relocate` events from the foliate engine.
  */
 function handleRelocate(loc) {
@@ -246,6 +295,7 @@ function handleRelocate(loc) {
   }
 
   setBookDir(currentBook?.dir || 'rtl');
+  updateReadingFooter(engine.getPageInfo(), loc);
 
   currentState = {
     ...currentState,
@@ -537,7 +587,14 @@ function resolveBookElement(target, doc, hostX, hostY) {
 function handleViewerTap({ hostX, hostY, target, doc }) {
   const now = performance.now();
   if (now - lastTapHandledAt < 60) return;
-  if ($('#reader')?.hidden || drawer.isOpen || !$('#image-viewer')?.hidden) return;
+  if ($('#reader')?.hidden || !$('#image-viewer')?.hidden) return;
+  if (drawer.isOpen) {
+    if (drawer.currentKind === 'settings') {
+      lastTapHandledAt = now;
+      drawer.close();
+    }
+    return;
+  }
   if ((globalThis.visualViewport?.scale ?? 1) > 1.05) return;
 
   const { el, sectionDoc } = resolveBookElement(target, doc, hostX, hostY);
@@ -893,6 +950,9 @@ async function openBookFile(file, { persist = true, id = null, existingCoverBlob
 
     applySettingsToView(engine.view, settings, info.dir);
     await engine.initPosition(currentState);
+    const sig = getLayoutSignature(engine.view, settings);
+    engine.recalculatePages(bookId, sig);
+    updateReadingFooter();
 
     settings.lastOpen = bookId;
     settings.onLibrary = false;
@@ -911,6 +971,7 @@ async function openBookFile(file, { persist = true, id = null, existingCoverBlob
       next: () => engine.next(),
       prev: () => engine.prev(),
       getLocation: () => engine.getLocation(),
+      getPageInfo: () => engine.getPageInfo(),
       goToFraction: f => engine.goToFraction(f),
     };
 
@@ -1077,6 +1138,23 @@ function openDrawerByKind(kind, triggerEl = null) {
   }
 
   if (kind === 'settings') {
+    if (currentBook && engine.view?.book) {
+      engine.captureSettingsAnchor();
+    }
+
+    const flushSettingsRelayout = () => {
+      clearTimeout(settingsRelayoutTimer);
+      settingsRelayoutTimer = null;
+      lastSettingsRelayoutAt = performance.now();
+      if (!currentBook || !engine.view?.book) return;
+      applySettingsToView(engine.view, settings, currentBook.dir || 'rtl');
+      engine.reanchorToSettingsAnchor();
+      const sig = getLayoutSignature(engine.view, settings);
+      engine.recalculatePages(currentBook.id, sig);
+      updateReadingFooter();
+      persistLocationNow();
+    };
+
     drawer.open(
       'settings',
       STRINGS.settingsTitle,
@@ -1084,14 +1162,41 @@ function openDrawerByKind(kind, triggerEl = null) {
         await renderSettingsDrawer(container, {
           settings,
           wakeLockSupported: wakeLock.isSupported,
-          onUpdateSettings: partial => {
+          onUpdateSettings: (partial, meta = {}) => {
             settings = { ...settings, ...partial };
             putSettings(settings);
-            applySettingsToView(engine.view, settings, currentBook?.dir || 'rtl');
+            applyThemeToDocument(settings);
             wakeLock.setState({
               enabled: settings.wakeLock,
               activeReading: Boolean(currentBook),
             });
+            updateReadingFooter();
+
+            if (!currentBook || !engine.view?.book) return;
+
+            const key = meta?.key || Object.keys(partial)[0] || '';
+            const isNonLayoutOnly =
+              key === 'theme' ||
+              key === 'wakeLock' ||
+              key === 'footerPage' ||
+              key === 'footerPagesLeft' ||
+              key === 'footerPercent' ||
+              key === 'footerChapter';
+
+            if (isNonLayoutOnly) {
+              applySettingsToView(engine.view, settings, currentBook.dir || 'rtl');
+              updateReadingFooter();
+            } else if (meta?.type === 'input') {
+              const now = performance.now();
+              if (now - lastSettingsRelayoutAt >= 120 && !settingsRelayoutTimer) {
+                flushSettingsRelayout();
+              } else {
+                clearTimeout(settingsRelayoutTimer);
+                settingsRelayoutTimer = setTimeout(flushSettingsRelayout, 120);
+              }
+            } else {
+              flushSettingsRelayout();
+            }
           },
           onOpenBookmarks: () => openDrawerByKind('bookmarks', triggerEl),
           onClearAllData: async () => {
@@ -1107,7 +1212,15 @@ function openDrawerByKind(kind, triggerEl = null) {
           },
         });
       },
-      { triggerEl },
+      {
+        triggerEl,
+        onClose: () => {
+          if (settingsRelayoutTimer) {
+            flushSettingsRelayout();
+          }
+          engine.clearSettingsAnchor();
+        },
+      },
     );
   }
 }
@@ -1247,8 +1360,13 @@ export async function initApp() {
     syncResponsiveToolbar();
     if ($('#reader')?.hidden || !currentBook) return;
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => {
-      engine.restoreStablePosition();
+    resizeTimer = setTimeout(async () => {
+      await engine.restoreStablePosition();
+      if (currentBook && engine.view?.book) {
+        const sig = getLayoutSignature(engine.view, settings);
+        engine.recalculatePages(currentBook.id, sig);
+        updateReadingFooter();
+      }
     }, 50);
   });
 

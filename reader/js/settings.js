@@ -134,6 +134,25 @@ export function applyThemeToDocument(settings) {
 }
 
 /**
+ * Compute a deterministic layout signature string for caching per-section page counts.
+ */
+export function getLayoutSignature(view, settings) {
+  const rect = view?.getBoundingClientRect?.() || {};
+  const w = Math.round(rect.width || globalThis.innerWidth || 0);
+  const h = Math.round(rect.height || globalThis.innerHeight || 0);
+  const flow = settings.flow === 'scrolled' ? 'scrolled' : 'paginated';
+  const font = settings.font || 'default';
+  const fontSize = Number(settings.fontSize) || 100;
+  const lineHeight = Number(settings.lineHeight) || 1.7;
+  const margins = Number(settings.margins) || 0;
+  const maxWidth = Number(settings.maxWidth) || 720;
+  const columns = settings.columns || 'auto';
+  const justify = settings.justify ? 1 : 0;
+  const hyphenate = settings.hyphenate ? 1 : 0;
+  return `${w}x${h}|fl:${flow}|f:${font}|fs:${fontSize}|lh:${lineHeight}|m:${margins}|mw:${maxWidth}|c:${columns}|j:${justify}|hy:${hyphenate}`;
+}
+
+/**
  * Apply typography, theme, layout flow, margins, and columns to the active foliate-view renderer.
  */
 export function applySettingsToView(view, settings, bookDir = 'rtl') {
@@ -144,10 +163,15 @@ export function applySettingsToView(view, settings, bookDir = 'rtl') {
 
   const renderer = view.renderer;
   const flow = settings.flow === 'scrolled' ? 'scrolled' : 'paginated';
+  const sideMargin = Math.max(0, Number(settings.margins) ?? 32);
+  const verticalMargin = Math.max(10, Math.round(14 + sideMargin * 0.44));
+  const gapPct = Math.max(3, Math.min(18, Number((3 + sideMargin * 0.095).toFixed(2))));
+  const blockPadInline = Math.round(sideMargin * 0.35);
+
   view.setAttribute('flow', flow);
   renderer.setAttribute('flow', flow);
-  renderer.setAttribute('margin', '28px');
-  renderer.setAttribute('gap', '6%');
+  renderer.setAttribute('margin', `${verticalMargin}px`);
+  renderer.setAttribute('gap', `${gapPct}%`);
   renderer.setAttribute('max-inline-size', `${settings.maxWidth}px`);
 
   const maxCols = settings.columns === '1' ? '1' : '2';
@@ -171,7 +195,6 @@ export function applySettingsToView(view, settings, bookDir = 'rtl') {
     : '-webkit-hyphens: manual !important; hyphens: manual !important;';
 
   const textAlign = settings.justify ? 'justify' : 'start';
-  const sideMargin = Math.max(0, Number(settings.margins) || 0);
 
   const css = `
 ${getIframeFontFacesCSS()}
@@ -196,6 +219,7 @@ ${fontRule}
 p, li, blockquote, dd {
   line-height: ${settings.lineHeight} !important;
   text-align: ${textAlign} !important;
+  padding-inline: ${blockPadInline}px !important;
   ${bookDir === 'ltr' ? hyphenRule : '-webkit-hyphens: none !important; hyphens: none !important;'}
 }
 
@@ -318,6 +342,28 @@ export async function renderSettingsDrawer(container, {
       </div>
       ` : ''}
 
+      <div class="setting-section-title">${STRINGS.footerSettingsHeading}</div>
+
+      <div class="setting-row setting-toggle">
+        <label for="setting-footer-page">${STRINGS.settingFooterPage}</label>
+        <input id="setting-footer-page" data-k="footerPage" type="checkbox">
+      </div>
+
+      <div class="setting-row setting-toggle">
+        <label for="setting-footer-pages-left">${STRINGS.settingFooterPagesLeft}</label>
+        <input id="setting-footer-pages-left" data-k="footerPagesLeft" type="checkbox">
+      </div>
+
+      <div class="setting-row setting-toggle">
+        <label for="setting-footer-percent">${STRINGS.settingFooterPercent}</label>
+        <input id="setting-footer-percent" data-k="footerPercent" type="checkbox">
+      </div>
+
+      <div class="setting-row setting-toggle">
+        <label for="setting-footer-chapter">${STRINGS.settingFooterChapter}</label>
+        <input id="setting-footer-chapter" data-k="footerChapter" type="checkbox">
+      </div>
+
       <div class="storage-status" id="storage-status-note">
         <span>${storageStatusText}</span>
       </div>
@@ -338,7 +384,7 @@ export async function renderSettingsDrawer(container, {
       control.value = String(settings[key]);
     }
 
-    const handleChange = () => {
+    const handleChange = event => {
       let nextVal;
       if (control.type === 'checkbox') {
         nextVal = control.checked;
@@ -355,7 +401,7 @@ export async function renderSettingsDrawer(container, {
         else outEl.textContent = String(nextVal);
       }
 
-      onUpdateSettings({ [key]: nextVal });
+      onUpdateSettings({ [key]: nextVal }, { type: event?.type || 'change', key });
     };
 
     control.addEventListener('input', handleChange);

@@ -141,17 +141,27 @@ const getVisibleRange = (doc, start, end, mapRect) => {
         nodes.push(node)
 
     // we're only interested in the first and last visible nodes
-    const from = nodes[0] ?? doc.body
+    let from = nodes[0] ?? doc.body
     const to = nodes[nodes.length - 1] ?? from
 
     // find the offset at which visibility changes
-    const startOffset = from.nodeType === 1 ? 0
+    let startOffset = from.nodeType === 1 ? 0
         : bisectNode(doc, from, (a, b) => {
             const p = mapRect(getBoundingClientRect(a))
             const q = mapRect(getBoundingClientRect(b))
             if (p.right < start && q.left > start) return 0
             return q.left > start ? -1 : 1
         })
+    if (from.nodeType === 3 && startOffset >= from.nodeValue.length && nodes.length > 1) {
+        from = nodes[1]
+        startOffset = from.nodeType === 1 ? 0
+            : bisectNode(doc, from, (a, b) => {
+                const p = mapRect(getBoundingClientRect(a))
+                const q = mapRect(getBoundingClientRect(b))
+                if (p.right < start && q.left > start) return 0
+                return q.left > start ? -1 : 1
+            })
+    }
     const endOffset = to.nodeType === 1 ? 0
         : bisectNode(doc, to, (a, b) => {
             const p = mapRect(getBoundingClientRect(a))
@@ -450,6 +460,7 @@ export class Paginator extends HTMLElement {
     #top
     #background
     #container
+    #measureContainer
     #header
     #footer
     #view
@@ -527,15 +538,20 @@ export class Paginator extends HTMLElement {
             grid-column: 1 / -1;
             grid-row: 1 / -1;
         }
-        #container {
+        #container, #measure-container {
             grid-column: 2 / 5;
             grid-row: 2;
             overflow: hidden;
         }
-        :host([flow="scrolled"]) #container {
+        :host([flow="scrolled"]) :is(#container, #measure-container) {
             grid-column: 1 / -1;
             grid-row: 1 / -1;
             overflow: auto;
+        }
+        #measure-container {
+            visibility: hidden;
+            pointer-events: none;
+            z-index: -1;
         }
         #header {
             grid-column: 3 / 4;
@@ -569,6 +585,7 @@ export class Paginator extends HTMLElement {
             <div id="background" part="filter"></div>
             <div id="header"></div>
             <div id="container"></div>
+            <div id="measure-container" aria-hidden="true"></div>
             <div id="footer"></div>
         </div>
         `
@@ -576,6 +593,7 @@ export class Paginator extends HTMLElement {
         this.#top = this.#root.getElementById('top')
         this.#background = this.#root.getElementById('background')
         this.#container = this.#root.getElementById('container')
+        this.#measureContainer = this.#root.getElementById('measure-container')
         this.#header = this.#root.getElementById('header')
         this.#footer = this.#root.getElementById('footer')
 
@@ -662,6 +680,7 @@ export class Paginator extends HTMLElement {
             case 'max-block-size':
             case 'max-column-count':
                 this.#top.style.setProperty('--_' + name, value)
+                this.render()
                 break
             case 'max-inline-size':
                 // needs explicit `render()` as it doesn't necessarily resize
@@ -780,11 +799,106 @@ export class Paginator extends HTMLElement {
     }
     render() {
         if (!this.#view) return
+        this.#view.suppressExpand = true
         this.#view.render(this.#beforeRender({
             vertical: this.#vertical,
             rtl: this.#rtl,
         }))
+        this.#view.suppressExpand = false
         this.#scrollToAnchor(this.#anchor)
+    }
+    reanchor(anchor) {
+        if (anchor != null) this.#anchor = anchor
+        if (!this.#view?.document) return
+        this.#view.suppressExpand = true
+        this.#view.render(this.#beforeRender({
+            vertical: this.#vertical,
+            rtl: this.#rtl,
+            background: getBackground(this.#view.document),
+        }))
+        this.#view.suppressExpand = false
+        this.#scrollToAnchor(this.#anchor, 'anchor')
+    }
+    #computeMeasureLayout({ vertical }) {
+        const { width, height } = this.#container.getBoundingClientRect()
+        const size = vertical ? height : width
+        const style = getComputedStyle(this.#top)
+        const maxInlineSize = parseFloat(style.getPropertyValue('--_max-inline-size'))
+        const maxColumnCount = parseInt(style.getPropertyValue('--_max-column-count-spread'))
+        const margin = parseFloat(style.getPropertyValue('--_margin'))
+        const g = parseFloat(style.getPropertyValue('--_gap')) / 100
+        const gap = -g / (g - 1) * size
+        const flow = this.getAttribute('flow')
+        if (flow === 'scrolled') {
+            return { flow, height, width, margin, gap, columnWidth: maxInlineSize }
+        }
+        const divisor = Math.min(maxColumnCount, Math.ceil(size / maxInlineSize))
+        const columnWidth = (size / divisor) - gap
+        return { flow, height, width, margin, gap, columnWidth }
+    }
+    async measureSection(section) {
+        if (!section?.load || !this.#measureContainer || !this.isConnected) return null
+        const src = await section.load()
+        if (!src || !this.isConnected) return null
+        const mView = new View({
+            container: this,
+            onExpand: () => {},
+        })
+        this.#measureContainer.append(mView.element)
+        try {
+            const styles = this.#styles
+            const bookDir = this.bookDir
+            await mView.load(
+                src,
+                doc => {
+                    if (doc.documentElement && bookDir === 'rtl' && !doc.documentElement.dir) {
+                        doc.documentElement.dir = 'rtl'
+                    }
+                    if (doc.head && styles) {
+                        const $beforeStyle = doc.createElement('style')
+                        const $style = doc.createElement('style')
+                        doc.head.prepend($beforeStyle)
+                        doc.head.append($style)
+                        if (Array.isArray(styles)) {
+                            $beforeStyle.textContent = styles[0]
+                            $style.textContent = styles[1]
+                        } else {
+                            $style.textContent = styles
+                        }
+                    }
+                },
+                ({ vertical, rtl }) => this.#computeMeasureLayout({ vertical, rtl }),
+            )
+            if (mView.document?.fonts?.ready) {
+                try {
+                    await mView.document.fonts.ready
+                } catch {}
+            }
+            mView.suppressExpand = true
+            mView.expand()
+            mView.suppressExpand = false
+
+            const sideProp = this.sideProp
+            const containerSize = this.#container.getBoundingClientRect()[sideProp]
+            const viewSize = mView.element.getBoundingClientRect()[sideProp]
+            let pages = 1
+            if (containerSize > 0) {
+                if (this.scrolled) {
+                    pages = Math.max(1, Math.ceil((viewSize - 1) / containerSize))
+                } else {
+                    const totalWithBuffers = Math.round(viewSize / containerSize)
+                    pages = Math.max(1, totalWithBuffers - 2)
+                }
+            }
+            const charCount = (mView.document?.body?.textContent || '').length
+            return { pages, charCount }
+        } finally {
+            mView.destroy()
+            mView.element.remove()
+        }
+    }
+    get scrollContainer() {
+        return this.#container
     }
     get scrolled() {
         return this.getAttribute('flow') === 'scrolled'
@@ -1085,7 +1199,10 @@ export class Paginator extends HTMLElement {
             return this.#scrollTo(offset, reason)
         }
         const offset = this.#getRectMapper()(rect).left
-        return this.#scrollToPage(Math.floor(offset / this.size) + (this.#rtl ? -1 : 1), reason)
+        const rawPage = Math.floor((offset + 2) / this.size) + (this.#rtl ? -1 : 1)
+        const maxTextPage = Math.max(1, (this.pages || 3) - 2)
+        const targetPage = Math.max(1, Math.min(maxTextPage, rawPage))
+        return this.#scrollToPage(targetPage, reason)
     }
     async #scrollTo(offset, reason, smooth, suppressRelocate = false) {
         if (this.#cancelAnimation) this.finishAnimation()
@@ -1145,7 +1262,7 @@ export class Paginator extends HTMLElement {
         }
         const { pages } = this
         if (!pages) return
-        const textPages = pages - 2
+        const textPages = Math.max(1, pages - 2)
         const newPage = Math.round(anchor * (textPages - 1))
         await this.#scrollToPage(newPage + 1, reason)
     }
@@ -1169,9 +1286,10 @@ export class Paginator extends HTMLElement {
         if (this.scrolled) detail.fraction = this.start / this.viewSize
         else if (this.pages > 0) {
             const { page, pages } = this
+            const textPages = Math.max(1, pages - 2)
             this.#header.style.visibility = page > 1 ? 'visible' : 'hidden'
-            detail.fraction = (page - 1) / (pages - 2)
-            detail.size = 1 / (pages - 2)
+            detail.fraction = Math.max(0, Math.min(1, (page - 1) / textPages))
+            detail.size = 1 / textPages
         }
         this.dispatchEvent(new CustomEvent('relocate', { detail }))
     }
@@ -1326,11 +1444,18 @@ export class Paginator extends HTMLElement {
         } else $style.textContent = styles
 
         // NOTE: needs `requestAnimationFrame` in Chromium
-        requestAnimationFrame(() =>
-            this.#background.style.background = getBackground(this.#view.document))
+        requestAnimationFrame(() => {
+            if (this.#view?.document) {
+                this.#background.style.background = getBackground(this.#view.document)
+            }
+        })
+
+        if (this.#view?.document) {
+            this.#view.expand()
+        }
 
         // needed because the resize observer doesn't work in Firefox
-        this.#view?.document?.fonts?.ready?.then(() => this.#view.expand())
+        this.#view?.document?.fonts?.ready?.then(() => this.#view?.expand())
     }
     focusView() {
         this.#view.document.defaultView.focus()

@@ -43,6 +43,13 @@ export const STRINGS = {
   goToPercentLabel: 'מעבר ל־',
   goToPercentAria: 'מעבר לאחוז בספר',
   chapterFallback: index => `פרק ${index + 1}`,
+  pageOfTotal: (x, y, exact = true) =>
+    exact ? `עמוד ${x} מתוך ${y}` : `עמוד ~${x} מתוך ~${y}`,
+  pagesLeftInChapter: remaining => {
+    if (remaining <= 0) return 'עמוד אחרון בפרק';
+    if (remaining === 1) return 'נותר עמוד אחד בפרק';
+    return `נותרו ${remaining} עמודים בפרק`;
+  },
   liveProgress: (percent, chapter) =>
     chapter ? `${chapter}, ${percent} אחוז` : `התקדמות קריאה ${percent} אחוז`,
 
@@ -93,6 +100,11 @@ export const STRINGS = {
   settingJustify: 'יישור טקסט מלא',
   settingHyphenate: 'מיקוף אוטומטי (אנגלית/LTR)',
   settingWakeLock: 'מניעת כיבוי מסך בקריאה',
+  footerSettingsHeading: 'שורת מידע תחתונה',
+  settingFooterPage: 'מספר עמוד (עמוד X מתוך Y)',
+  settingFooterPagesLeft: 'עמודים שנותרו בפרק',
+  settingFooterPercent: 'אחוז התקדמות בשורה התחתונה',
+  settingFooterChapter: 'שם הפרק בשורה התחתונה',
   clearAllBtn: 'מחיקת כל הנתונים',
   storageProtected: 'האחסון מוגן מפני מחיקה אוטומטית',
   storageUnprotected: 'האחסון אינו מוגן מפני מחיקה אוטומטית',

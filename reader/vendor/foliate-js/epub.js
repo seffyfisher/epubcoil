@@ -735,12 +735,13 @@ class Loader {
         return url
     }
     ref(href, parent) {
-        const childList = this.#children.get(parent)
-        if (!childList?.includes(href)) {
-            this.#refCount.set(href, this.#refCount.get(href) + 1)
-            //console.log(`referencing ${href}, now ${this.#refCount.get(href)}`)
-            if (childList) childList.push(href)
-            else this.#children.set(parent, [href])
+        if (parent) {
+            const childList = this.#children.get(parent)
+            if (!childList?.includes(href)) {
+                this.#refCount.set(href, (this.#refCount.get(href) ?? 0) + 1)
+                if (childList) childList.push(href)
+                else this.#children.set(parent, [href])
+            }
         }
         return this.#cache.get(href)
     }
@@ -900,11 +901,16 @@ class Loader {
             this.loadItem(assetMap.get(match.replace(/^\//, '')),
                 parents.concat(href)))
     }
-    unloadItem(item) {
-        this.unref(item?.href)
+    unloadItem() {
+        // Keep spine section blob URLs cached while the book is open so background
+        // off-screen page measurement and rapid back/forth navigation never race.
+        // All blob URLs are revoked in destroy() when the book is closed.
     }
     destroy() {
         for (const url of this.#cache.values()) URL.revokeObjectURL(url)
+        this.#cache.clear()
+        this.#children.clear()
+        this.#refCount.clear()
     }
 }
 

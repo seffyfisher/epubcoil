@@ -13,6 +13,7 @@ export const migratedKey = `${DB_NAME}.migrated`;
 export const libraryIndexKey = `${DB_NAME}.library`;
 export const installDismissedKey = `${DB_NAME}.installDismissed`;
 export const stateKey = id => `${DB_NAME}.book.${id}`;
+export const pageCacheKey = id => `${DB_NAME}.pages.${id}`;
 
 export const DEFAULT_SETTINGS = Object.freeze({
   theme: 'auto',
@@ -26,6 +27,10 @@ export const DEFAULT_SETTINGS = Object.freeze({
   flow: 'paginated',
   columns: 'auto',
   wakeLock: false,
+  footerPage: true,
+  footerPagesLeft: true,
+  footerPercent: true,
+  footerChapter: false,
   lastOpen: null,
   onLibrary: true,
 });
@@ -67,6 +72,10 @@ export function getSettings() {
   settings.lineHeight = clampNumber(settings.lineHeight, 1.2, 2.4, DEFAULT_SETTINGS.lineHeight);
   settings.margins = clampNumber(settings.margins, 0, 80, DEFAULT_SETTINGS.margins);
   settings.maxWidth = clampNumber(settings.maxWidth, 480, 1100, DEFAULT_SETTINGS.maxWidth);
+  settings.footerPage = Boolean(settings.footerPage ?? DEFAULT_SETTINGS.footerPage);
+  settings.footerPagesLeft = Boolean(settings.footerPagesLeft ?? DEFAULT_SETTINGS.footerPagesLeft);
+  settings.footerPercent = Boolean(settings.footerPercent ?? DEFAULT_SETTINGS.footerPercent);
+  settings.footerChapter = Boolean(settings.footerChapter ?? DEFAULT_SETTINGS.footerChapter);
   return settings;
 }
 
@@ -101,6 +110,60 @@ export function putState(bookId, state) {
     localStorage.setItem(stateKey(bookId), JSON.stringify(state));
   } catch {
     // Ignore quota errors on state write
+  }
+}
+
+/**
+ * Read cached per-section page counts for a book and layout signature from localStorage.
+ */
+export function getPageCache(bookId, signature) {
+  if (!bookId || !signature) return null;
+  try {
+    const raw = localStorage.getItem(pageCacheKey(bookId));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const entry = parsed?.[signature];
+    if (
+      Array.isArray(entry) &&
+      entry.length > 0 &&
+      entry.every(n => typeof n === 'number' && n >= 0)
+    ) {
+      return entry;
+    }
+  } catch {
+    // Ignore storage read errors
+  }
+  return null;
+}
+
+/**
+ * Persist exact per-section page counts for a book and layout signature in localStorage.
+ */
+export function putPageCache(bookId, signature, sectionPages) {
+  if (!bookId || !signature || !Array.isArray(sectionPages)) return;
+  try {
+    const key = pageCacheKey(bookId);
+    let map = {};
+    const raw = localStorage.getItem(key);
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          map = parsed;
+        }
+      } catch {
+        map = {};
+      }
+    }
+    delete map[signature];
+    map[signature] = sectionPages;
+    const keys = Object.keys(map);
+    while (keys.length > 10) {
+      delete map[keys.shift()];
+    }
+    localStorage.setItem(key, JSON.stringify(map));
+  } catch {
+    // Ignore quota errors
   }
 }
 
@@ -318,6 +381,7 @@ export async function removeBook(id) {
   });
   try {
     localStorage.removeItem(stateKey(id));
+    localStorage.removeItem(pageCacheKey(id));
     const settings = getSettings();
     if (settings.lastOpen === id) {
       settings.lastOpen = null;
