@@ -2,14 +2,52 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 ---
 
-<BaseLayout title="חיפוש | epub.co.il" description="חיפוש באתר epub.co.il"
-  ><section class="page-head">
-    <p class="kicker">חיפוש</p><h1>חיפוש באתר</h1>
-  </section><div id="search" class="prose" aria-live="polite">
-    טוענים את החיפוש…
-  </div><script is:inline>
-    {
-      `(async()=>{const root=document.querySelector('#search'),q=new URLSearchParams(location.search).get('q')||'';try{const m=await import('/pagefind/pagefind.js'),pf=await m.init();if(!q){root.textContent='הקלידו מילת חיפוש בשדה בדף הבית.';return}const r=await pf.search(q);if(!r.results.length){root.textContent='לא נמצאו תוצאות.';return}root.innerHTML='<ol class="entry-list"></ol>';for(const x of r.results){const d=await x.data();root.querySelector('ol').insertAdjacentHTML('beforeend','<li><h2><a href="'+d.url+'">'+d.meta.title+'</a></h2><p>'+d.excerpt+'</p></li>')}}catch(e){root.textContent='החיפוש זמין לאחר בניית האתר.'}})()`;
-    }
-  </script></BaseLayout
->
+<BaseLayout title="חיפוש | epub.co.il" description="חיפוש באתר epub.co.il">
+  <section class="page-head">
+    <p class="kicker">חיפוש</p>
+    <h1>חיפוש באתר</h1>
+  </section>
+  <form class="searchbox" action="/search/" method="get" style="margin-block-end:1.5rem">
+    <input name="q" aria-label="חיפוש באתר" placeholder="חיפוש באתר" />
+    <button type="submit">חיפוש</button>
+  </form>
+  <div id="search" class="prose" aria-live="polite">טוענים את החיפוש…</div>
+  <script is:inline>
+    (async () => {
+      const root = document.querySelector("#search");
+      const q = new URLSearchParams(location.search).get("q") || "";
+      const input = document.querySelector('form.searchbox input[name="q"]');
+      if (input) input.value = q;
+      try {
+        const pagefind = await import("/pagefind/pagefind.js");
+        await pagefind.init();
+        if (!q) {
+          root.textContent = "הקלידו מילת חיפוש בשדה למעלה.";
+          return;
+        }
+        const r = await pagefind.search(q);
+        if (!r.results.length) {
+          root.textContent = "לא נמצאו תוצאות.";
+          return;
+        }
+        root.innerHTML = '<ol class="entry-list"></ol>';
+        const ol = root.querySelector("ol");
+        for (const x of r.results) {
+          const d = await x.data();
+          const title = d.meta?.title || d.url;
+          const li = document.createElement("li");
+          li.innerHTML =
+            "<h2><a href=\"\"></a></h2><p></p>";
+          const a = li.querySelector("a");
+          a.href = d.url;
+          a.textContent = title;
+          li.querySelector("p").innerHTML = d.excerpt || "";
+          ol.appendChild(li);
+        }
+      } catch (e) {
+        console.error(e);
+        root.textContent = "החיפוש לא זמין כרגע. אפשר לנווט דרך המדורים בתפריט.";
+      }
+    })();
+  </script>
+</BaseLayout>
