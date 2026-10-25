@@ -1,0 +1,103 @@
+{
+  "$ref": "#/definitions/software",
+  "definitions": {
+    "software": {
+      "type": "object",
+      "properties": {
+        "$schema": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "checked": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "integer",
+                "format": "unix-time"
+              }
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "authoring",
+              "conversion",
+              "validation",
+              "reading",
+              "accessibility",
+              "fonts",
+              "libraries",
+              "other"
+            ]
+          },
+          "platforms": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "web",
+                "windows",
+                "mac",
+                "linux",
+                "ios",
+                "android",
+                "eink"
+              ]
+            }
+          },
+          "pricing": {
+            "type": "string",
+            "enum": [
+              "free",
+              "paid",
+              "freemium"
+            ]
+          },
+          "openSource": {
+            "type": "boolean"
+          },
+          "rtlNotes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "url",
+          "checked",
+          "name",
+          "description",
+          "category",
+          "platforms",
+          "pricing",
+          "openSource"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

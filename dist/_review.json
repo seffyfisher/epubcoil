@@ -1,0 +1,159 @@
+{
+  "generatedBy": "src/lib/review-report.mjs via astro:build:done",
+  "needsReview": [
+    {
+      "id": "basics/epub-file-structure",
+      "items": [
+        "פקודות האריזה מתאימות ל־Info-ZIP; יש לאמת את התחביר ואת תוצאת הארכיון מול כלי ה־ZIP המדויק שבו משתמש תהליך ההפקה."
+      ]
+    },
+    {
+      "id": "basics/what-is-epub",
+      "items": [
+        "יש לאמת ולצרף מקור ראשוני לדף ההיסטורי המדויק של מעבר פעילות EPUB מן IDPF אל W3C; המאמר נמנע מציון תאריך למעבר."
+      ]
+    },
+    {
+      "id": "design/ebook-design-checklist",
+      "items": [
+        "ההמלצה של חנויות גדולות (Apple, Amazon) נגד פריסה קבועה בספרי טקסט — מבוסס על הרשימה מ־2020, לא נבדק מול ההנחיות העדכניות.",
+        "פורמט KFX של Amazon מתאים אותיות פתיחה ועצמים צפים לגודל הגופן — לפי הרשימה המקורית, לא נבדק.",
+        "הנחיות Kindle נגד צבעי טקסט ‎#000–#666 — לפי הרשימה המקורית, לוודא שעדיין מופיע בהנחיות העדכניות.",
+        "-webkit-text-size-adjust שובר את הגדלת הגופן ב־Apple Books ב־iOS, ו־text-rendering שובר תצוגה בחלק ממכשירי Kindle — טענות מ־2020, לא נבדקו במכשירים עדכניים.",
+        "media query ריק של ‎@amzn-*‎ מקריס את RMSDK הישן — לפי הרשימה המקורית, לא נבדק.",
+        "יש מערכות קריאה שמסתירות aside עם epub:type=\"footnote\" מתצוגת הקריאה הרגילה — התנהגות תלוית קורא, לא נבדקה.",
+        "יש מערכות קריאה שפותחות ספר בציון הדרך bodymatter — לא נבדק בקוראים ספציפיים.",
+        "קו תחתון של קישור מתנגש בניקוד שמתחת לאותיות, ותמיכה ב־text-underline-offset בקוראים — לא נבדק.",
+        "תצוגת טקסט עברי בתוך רכיב text של SVG בקוראים שונים — לא נבדק.",
+        "קוראים ישנים שאינם מכירים מאפיינים לוגיים (margin-inline-start) — הנחה סבירה לגבי מנועים ישנים כמו RMSDK, לא נבדק."
+      ]
+    },
+    {
+      "id": "design/footnotes",
+      "items": [
+        "הצגת הערות בחלון קופץ, והסתרה או הצגה של aside בזרימת הטקסט — תלויה בקורא; לא נבדק בקוראים ספציפיים.",
+        "מספר הערה שבא מיד אחרי מילה לטינית עלול להיצמד לרצף הלטיני ולהופיע בצד הלא צפוי, ו־bdi סביב המילה פותר זאת — נגזר מאלגוריתם bidi, לא נבדק בקוראים.",
+        "כיוון ההצגה של חץ כמו ↩ בטקסט עברי תלוי בגופן ובקורא — לא נבדק.",
+        "המלצה על צורת מירכאות (\" או מירכאות טיפוגרפיות) ועל קו לפתיחת דיבור (– או —) היא המלצת סגנון, לא כלל של האקדמיה ללשון; לאמת מול מדריך סגנון.",
+        "מבנה התיקיות שמייצא Sigil (למשל ../Text/notes.xhtml) — ספציפי ל־Sigil ולגרסה; לאמת.",
+        "התנהגות itemref עם linear=\"no\" לקובץ הערות, וחובה שקובץ שמקושר מהטקסט יופיע ב־spine — לאמת מול EPUB 3.3 ומול EPUBCheck."
+      ]
+    },
+    {
+      "id": "design/tables",
+      "items": [
+        "תמיכה של מערכות קריאה בגלילה אופקית (overflow-x: auto) בעטיפה של טבלה — לא נבדק בקוראים ספציפיים.",
+        "האם מצב כהה בקוראים שונים מחליף צבע טקסט כך שגבול ב־currentColor משתנה איתו — הנחה סבירה לפי CSS, לא נבדק בקוראים.",
+        "קוראי מסך מכריזים על כותרות th עם scope גם בתוך EPUB — תלוי בקורא ובטכנולוגיה המסייעת, לא נבדק.",
+        "טבלת הדוגמה (EPUB / PDF / פורמטים של Kindle) מנוסחת כללית בכוונה; לוודא שאין בה טענה שנויה במחלוקת.",
+        "הגדלת תמונה בקורא (zoom) — יש קוראים שמאפשרים, יש שלא; הניסוח במאמר זהיר, לא נבדק."
+      ]
+    },
+    {
+      "id": "experiments/generative-books",
+      "items": [
+        "מכניקת NaNoGenMo (כל נובמבר, 50,000 מילים לפחות, שיתוף קוד) — מבוססת היטב לפי הבריף; לאמת ניסוח מול המאגר של השנה הנוכחית.",
+        "תאימות basil.js לגרסאות InDesign עדכניות — לא נבדק, ולכן לא נטען במאמר.",
+        "הסקריפט לדוגמה הורץ ב־Python 3 והפיק XHTML תקין מבחינת XML, אבל לא נבדק ב־EPUBCheck כחבילה מלאה (OPF, ‏nav ו־container.xml לא נוצרו)."
+      ]
+    },
+    {
+      "id": "reading/open-epub",
+      "items": [
+        "יש להוסיף מקור רשמי חי וממוקד עבור מסלול הייבוא הנוכחי ל־Apple Books ב־iPhone וב־iPad; דפי Apple שנבדקו הפנו לדף פתיחה כללי.",
+        "יש לאמת מול תיעוד Kobo העדכני את הוראות העברת EPUB לכל דגם e-reader לפני הוספת צעדי ממשק מפורטים.",
+        "יש לאמת תוצאות RTL לפי גרסאות עדכניות של האפליקציות; לכן המאמר אינו מבטיח תמיכה ייחודית של אפליקציה מסוימת."
+      ]
+    },
+    {
+      "id": "reading/send-to-kindle",
+      "items": [
+        "הזמינות המדויקת של כל דרך שליחה ושל הגדרות הדוא״ל משתנה לפי אזור, חשבון וגרסת יישום."
+      ]
+    }
+  ],
+  "descriptionOutsideRange": [],
+  "missingInternalLinks": [
+    {
+      "from": "basics/epub-file-structure",
+      "target": "production/metadata"
+    },
+    {
+      "from": "basics/epub-file-structure",
+      "target": "glossary/manifest"
+    },
+    {
+      "from": "basics/epub-file-structure",
+      "target": "production/toc-nav"
+    },
+    {
+      "from": "basics/epub-file-structure",
+      "target": "production/epubcheck"
+    },
+    {
+      "from": "basics/what-is-epub",
+      "target": "glossary/manifest"
+    },
+    {
+      "from": "basics/what-is-epub",
+      "target": "design/reflowable-vs-fixed-layout"
+    },
+    {
+      "from": "css/css-in-epub",
+      "target": "css/epub-prefixes"
+    },
+    {
+      "from": "css/css-in-epub",
+      "target": "css/reader-pitfalls"
+    },
+    {
+      "from": "css/css-in-epub",
+      "target": "design/images"
+    },
+    {
+      "from": "css/css-in-epub",
+      "target": "css/fonts-css"
+    },
+    {
+      "from": "css/css-in-epub",
+      "target": "hebrew/hebrew-fonts"
+    },
+    {
+      "from": "css/css-in-epub",
+      "target": "css/page-breaks"
+    },
+    {
+      "from": "css/css-in-epub",
+      "target": "hebrew/bidi-numbers-latin"
+    },
+    {
+      "from": "css/css-in-epub",
+      "target": "css/media-queries-dark-mode"
+    },
+    {
+      "from": "css/css-in-epub",
+      "target": "production/epubcheck"
+    },
+    {
+      "from": "css/css-in-epub",
+      "target": "hebrew/reader-issues"
+    },
+    {
+      "from": "hebrew/rtl-basics",
+      "target": "hebrew/bidi-numbers-latin"
+    },
+    {
+      "from": "reading/open-epub",
+      "target": "hebrew/reader-issues"
+    },
+    {
+      "from": "reading/send-to-kindle",
+      "target": "hebrew/bidi-numbers-latin"
+    }
+  ],
+  "drafts": [
+    "design/footnotes",
+    "design/tables",
+    "experiments/generative-books"
+  ]
+}

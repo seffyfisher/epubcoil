@@ -1,0 +1,88 @@
+{
+  "$ref": "#/definitions/links",
+  "definitions": {
+    "links": {
+      "type": "object",
+      "properties": {
+        "$schema": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "checked": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "integer",
+                "format": "unix-time"
+              }
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "standards",
+              "specs",
+              "communities",
+              "blogs",
+              "newsletters",
+              "conferences",
+              "publisher-guidelines",
+              "documentation"
+            ]
+          },
+          "region": {
+            "type": "string",
+            "enum": [
+              "israel",
+              "world"
+            ]
+          },
+          "lang": {
+            "type": "string",
+            "enum": [
+              "he",
+              "en",
+              "other"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "url",
+          "checked",
+          "title",
+          "description",
+          "category",
+          "region",
+          "lang"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}
