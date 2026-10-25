@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Disallow: /_review.json
+Sitemap: https://epub.co.il/sitemap-index.xml
