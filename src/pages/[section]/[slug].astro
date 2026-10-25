@@ -1,0 +1,29 @@
+---
+import { getCollection, render } from "astro:content";
+import ArticleLayout from "../../layouts/ArticleLayout.astro";
+import { articleSlug } from "../../lib/sections";
+import { existingRelated } from "../../lib/links";
+
+export async function getStaticPaths() {
+  const all = await getCollection("articles", ({ data }) => !data.draft);
+  return all.map((entry) => ({
+    params: { section: entry.data.section, slug: articleSlug(entry.id) },
+    props: { entry, all },
+  }));
+}
+const { entry, all } = Astro.props;
+const { Content, headings } = await render(entry);
+const siblings = all
+  .filter((article) => article.data.section === entry.data.section)
+  .sort((a, b) => a.data.order - b.data.order);
+const index = siblings.findIndex((article) => article.id === entry.id);
+---
+
+<ArticleLayout
+  {entry}
+  {Content}
+  {headings}
+  previous={siblings[index - 1]}
+  next={siblings[index + 1]}
+  related={existingRelated(all, entry.data.related)}
+/>

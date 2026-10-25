@@ -1,0 +1,22 @@
+---
+/** The EPUB diamond mark (public/logo.svg), inlined so it follows the theme via currentColor. */
+interface Props {
+  size?: number;
+  class?: string;
+}
+const { size = 32, class: className } = Astro.props;
+---
+
+<svg
+  class:list={["logo", className]}
+  width={size}
+  height={size}
+  viewBox="0 0 384 384"
+  fill="none"
+  aria-hidden="true"
+  focusable="false"
+  xmlns="http://www.w3.org/2000/svg"
+  ><path
+    d="M192 313L313 192L192 71L152 112L232 192L192 232L71 112L176 6C185 -2 199 -2 208 6L378 176C386 185 386 199 378 208L208 378C199 386 185 386 176 378L6 208C-2 199 -2 185 6 176L31 152L192 313Z"
+    fill="currentColor"></path></svg
+>

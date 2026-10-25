@@ -1,0 +1,13 @@
+---
+import { inlineMarkup } from "../lib/links";
+interface Props {
+  answer: string;
+}
+
+const { answer } = Astro.props;
+---
+
+<section class="answer-box" aria-label="תשובה קצרה">
+  <p class="answer-label">בקצרה</p>
+  <p set:html={inlineMarkup(answer)} />
+</section>

@@ -1,0 +1,45 @@
+---
+# העתיקו את הקובץ אל src/content/articles/<section>/<slug>.md
+# slug באנגלית, אותיות קטנות ומקפים בלבד (למשל what-is-epub)
+title: "כותרת המאמר בעברית"
+description: "תיאור מטא בעברית, 120 עד 160 תווים. משפט אחד או שניים שמסבירים מה הקורא יקבל מהעמוד, בלי סימני קריאה ובלי מילות באזז."
+section: basics # basics | reading | hebrew | production | design | css | js | experiments
+order: 10 # מיקום ברשימת המדור (קטן = למעלה)
+answer: "תשובה ישירה במשפט או שניים לשאלה שבכותרת. מוצגת בראש העמוד ובנתונים המובנים."
+published: 2026-10-24
+updated: 2026-10-24
+# featured: true # להציג בעמוד הבית
+faq:
+  - q: "שאלה נפוצה?"
+    a: "תשובה קצרה ועניינית."
+sources:
+  - title: "EPUB 3.3 — W3C Recommendation"
+    url: "https://www.w3.org/TR/epub-33/"
+related:
+  - basics/what-is-epub
+  - basics/epub-file-structure
+# howto: # רק למאמרי "איך עושים" עם שלבים ברורים
+#   name: "איך ..."
+#   steps:
+#     - name: "שלב ראשון"
+#       text: "מה עושים בשלב הזה."
+#     - name: "שלב שני"
+#       text: "מה עושים בשלב הזה."
+tags: [epub]
+# needsReview: # טענות שלא אומתו עד הסוף. לא מוצג באתר, נאסף ל-dist/_review.json
+#   - "הטענה X לגבי קורא Y"
+---
+
+פסקת פתיחה קצרה שעונה מיד. בלי הקדמות.
+
+## כותרת משנה ראשונה
+
+טקסט. קישור למאמר אחר: [מבנה קובץ EPUB](/basics/epub-file-structure/). קישור למונח: [OPF](/glossary/opf/).
+
+```xml
+<dc:language>he</dc:language>
+```
+
+## כותרת משנה שנייה
+
+טקסט.

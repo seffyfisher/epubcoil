@@ -1,0 +1,65 @@
+---
+import { getCollection, render } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { formatHebrewDate } from "../../lib/dates";
+export async function getStaticPaths() {
+  return (await getCollection("glossary", ({ data }) => !data.draft)).map(
+    (entry) => ({ params: { slug: entry.id }, props: { entry } }),
+  );
+}
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const data = entry.data;
+const graph = [
+  {
+    "@type": "DefinedTerm",
+    name: data.term,
+    description: data.short,
+    inDefinedTermSet: "https://epub.co.il/glossary/",
+    url: `https://epub.co.il/glossary/${entry.id}/`,
+  },
+];
+---
+
+<BaseLayout
+  title={`${data.term} | מילון epub.co.il`}
+  description={data.short}
+  jsonld={graph}
+  ><article class="article" data-pagefind-body>
+    <nav class="breadcrumbs" aria-label="פירורי לחם">
+      <a href="/">בית</a><span>/</span><a href="/glossary/">מילון</a><span
+        >/</span
+      ><span>{data.term}</span>
+    </nav><header class="article-header">
+      <p class="kicker"><bdi dir="ltr">{data.termEn}</bdi></p><h1>
+        {data.term}
+      </h1><p class="dek">{data.short}</p>{
+        data.updated ? (
+          <p class="meta-line">
+            עודכן לאחרונה{" "}
+            <time datetime={data.updated.toISOString()}>
+              {formatHebrewDate(data.updated)}
+            </time>
+          </p>
+        ) : null
+      }
+    </header><div class="article-main prose">
+      <Content /><section class="sources">
+        <h2>מקורות</h2><ol>
+          {
+            data.sources.map((source) => (
+              <li>
+                <>
+                  <a href={source.url} rel="noopener">
+                    {source.title}
+                  </a>
+                  <small>{new URL(source.url).hostname}</small>
+                </>
+              </li>
+            ))
+          }
+        </ol>
+      </section>
+    </div>
+  </article></BaseLayout
+>

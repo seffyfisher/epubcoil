@@ -1,0 +1,84 @@
+- id: idpf-epub3-sample-documents
+  title: EPUB 3 Sample Documents
+  url: https://github.com/IDPF/epub3-samples
+  description: מאגר דוגמאות EPUB 3 הכולל מסמכים לבדיקת יכולות של קוראים ומפיקים.
+  kind: other
+  creator: IDPF
+  checked: 2026-10-24
+- id: w3c-epub-tests
+  title: W3C EPUB Tests
+  url: https://github.com/w3c/epub-tests
+  description: מאגר בדיקות ציבורי ל־EPUB 3 שמוחזק בידי קבוצת העבודה של EPUB ב־W3C.
+  kind: other
+  creator: W3C EPUB3 Working Group
+  checked: 2026-10-24
+- id: readium-test-files
+  title: Readium Test Files
+  url: https://github.com/readium/readium-test-files
+  description: אוסף קובצי EPUB 3 שמדגימים יכולות ותאימות במנועי Readium.
+  kind: other
+  creator: Readium
+  checked: 2026-10-24
+- id: ace-by-daisy-accessibility-checker
+  title: Ace by DAISY
+  url: https://daisy.github.io/ace/
+  description: פרויקט פתוח לבדיקת היבטי נגישות בפרסומי EPUB.
+  kind: accessibility
+  creator: DAISY Consortium
+  checked: 2026-10-24
+- id: standard-ebooks
+  title: Standard Ebooks
+  url: https://standardebooks.org/
+  description: פרויקט מהדורות דיגיטליות חופשיות המדגיש טיפוגרפיה והפקה מוקפדת.
+  kind: typography
+  creator: Standard Ebooks
+  checked: 2026-10-24
+- id: idpf-accessible-epub-3
+  title: Accessible EPUB 3
+  url: https://github.com/IDPF/epub3-samples/tree/main/30/accessible_epub_3
+  description: דוגמת EPUB 3 ממוקדת נגישות מתוך מאגר הדוגמאות של IDPF.
+  kind: accessibility
+  creator: IDPF
+  checked: 2026-10-24
+- id: idpf-cc-shared-culture
+  title: CC Shared Culture
+  url: https://github.com/IDPF/epub3-samples/tree/main/30/cc-shared-culture
+  description: דוגמת EPUB 3 עם Media Overlays מתוך מאגר הדוגמאות של IDPF.
+  kind: audio-video
+  creator: IDPF
+  checked: 2026-10-24
+- id: idpf-linear-algebra
+  title: Linear Algebra
+  url: https://github.com/IDPF/epub3-samples/tree/main/30/linear-algebra
+  description: דוגמת EPUB 3 של IDPF הכוללת תוכן מתמטי לבחינת תמיכת קוראים.
+  kind: other
+  creator: IDPF
+  checked: 2026-10-24
+- id: idpf-moby-dick-media-overlays
+  title: Moby-Dick with Media Overlays
+  url: https://github.com/IDPF/epub3-samples/tree/main/30/moby-dick-mo
+  description: דוגמת EPUB 3 של Moby-Dick עם Media Overlays לסנכרון קריאה ושמע.
+  kind: audio-video
+  creator: IDPF
+  checked: 2026-10-24
+- id: idpf-wasteland
+  title: The Waste Land
+  url: https://github.com/IDPF/epub3-samples/tree/main/30/wasteland
+  description: דוגמת EPUB 3 לבחינת טיפוגרפיה, פריסה ותכונות תוכן במערכות קריאה.
+  kind: typography
+  creator: IDPF
+  checked: 2026-10-24
+- id: readium-css-tests
+  title: Readium CSS Tests
+  url: https://github.com/readium/css/tree/develop/tests
+  description: דפי בדיקה חיים של Readium CSS לכיווניות, ערכות צבעים, גופנים ופריסה.
+  kind: typography
+  creator: Readium
+  checked: 2026-10-24
+- id: w3c-audiobooks-specification
+  title: W3C Audiobooks
+  url: https://www.w3.org/TR/audiobooks/
+  description: מפרט W3C לפורמט ספרי שמע מבוסס־ווב; אינו מפרט EPUB אך רלוונטי לניסוי בפרסום דיגיטלי.
+  kind: audio-video
+  creator: W3C
+  checked: 2026-10-24

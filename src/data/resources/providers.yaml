@@ -1,0 +1,58 @@
+- id: audiobook-co-il
+  name: Audiobook.co.il
+  url: https://audiobook.co.il/
+  services: [production, conversion, audiobooks]
+  description: עסק ישראלי שמציג שירותי הפקת ספרי שמע והמרת קובצי Word ל־EPUB 3.
+  sourceUrl: https://audiobook.co.il/
+  checked: 2026-10-24
+- id: sifrei-niv
+  name: ספרי ניב
+  url: https://www.nivbook.co.il/
+  services: [production, design, typesetting, audiobooks, distribution]
+  description: הוצאה לאור ישראלית שמציגה שירותי עיצוב, עימוד, הפקת ספר דיגיטלי וספרי שמע.
+  sourceUrl: https://www.nivbook.co.il/
+  checked: 2026-10-24
+- id: imudim
+  name: עימודים
+  url: https://imudim.org/
+  services: [typesetting]
+  description: סטודיו ישראלי לעימוד ספרים שמציג גם הגהה ותיקונים כחלק מתהליך העבודה.
+  sourceUrl: https://imudim.org/
+  checked: 2026-10-24
+- id: centaur
+  name: קנטאור
+  url: https://www.centaur.co.il/print-digital-books/
+  services: [production, conversion, typesetting, design]
+  description: סטודיו ישראלי שמציג הפקת ספר דיגיטלי ב־EPUB, עימוד לדפוס ועיצוב כריכות.
+  sourceUrl: https://www.centaur.co.il/print-digital-books/
+  checked: 2026-10-24
+- id: natalie-klug
+  name: נטלי קלוג
+  url: https://www.natalieklug.com/ebook
+  services: [production, conversion, design]
+  city: הרצליה
+  description: סטודיו לעיצוב ספרים שמציג הפקת מהדורה דיגיטלית ב־EPUB בעברית.
+  sourceUrl: https://www.natalieklug.com/ebook
+  checked: 2026-10-24
+- id: sifriapp
+  name: ספריאפ
+  url: https://www.sifriapp.co.il/
+  services: [production, conversion, distribution]
+  description: פלטפורמה ישראלית לספרים דיגיטליים שמציגה שירותי הפקה והמרה ל־EPUB ומערכת הפצה.
+  sourceUrl: https://www.sifriapp.co.il/
+  checked: 2026-10-24
+- id: friends-songs
+  name: Friends Songs
+  url: https://www.friends-songs.com/audio-book/
+  services: [audiobooks]
+  city: ראשון לציון
+  description: אולפן הקלטות שמציג הקלטה ועריכה של ספרי שמע בקול הסופר או בקול קריין.
+  sourceUrl: https://www.friends-songs.com/audio-book/
+  checked: 2026-10-24
+- id: likol
+  name: ליקול הפקות
+  url: https://www.likol.co.il/
+  services: [audiobooks]
+  description: אולפן וסוכנות קריינים שמציגים קריינות והקלטה של ספרים וסיפורים.
+  sourceUrl: "https://www.likol.co.il/%D7%A7%D7%A8%D7%99%D7%99%D7%A0%D7%95%D7%AA-%D7%A1%D7%99%D7%A4%D7%95%D7%A8%D7%99%D7%9D-%D7%94%D7%A7%D7%9C%D7%98%D7%AA-%D7%A1%D7%A4%D7%A8%D7%99%D7%9D/"
+  checked: 2026-10-24

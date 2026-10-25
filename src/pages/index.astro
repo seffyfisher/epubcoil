@@ -1,0 +1,86 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { organization, websiteJsonLd } from "../lib/jsonld";
+import { sections } from "../lib/sections";
+import EntryList from "../components/EntryList.astro";
+import SectionList from "../components/SectionList.astro";
+import StoryCard from "../components/StoryCard.astro";
+
+const articles = (
+  await getCollection("articles", ({ data }) => !data.draft)
+).sort((a, b) => b.data.updated.getTime() - a.data.updated.getTime());
+const featured = articles
+  .filter((article) => article.data.featured)
+  .slice(0, 4);
+const stories = featured.length ? featured : articles.slice(0, 4);
+const counts = new Map(
+  sections.map(({ key }) => [
+    key,
+    articles.filter((article) => article.data.section === key).length,
+  ]),
+);
+---
+
+<BaseLayout
+  title="epub.co.il — ספרים דיגיטליים בעברית"
+  description="ידע עברי על ספרים דיגיטליים, EPUB, טיפוגרפיה ועבודה מימין לשמאל."
+  jsonld={[websiteJsonLd, organization]}
+>
+  <section class="page-head">
+    <p class="kicker">ספרים דיגיטליים בעברית</p>
+    <h1>ידע מעשי על EPUB, קריאה והפקה</h1>
+    <p class="lede">
+      מדריכים קצרים ומדויקים למי שקוראים, מייצרים ובודקים ספרים דיגיטליים — עם
+      תשומת לב מיוחדת לעברית ולימין־לשמאל.
+    </p>
+    <form class="searchbox" action="/search/" method="get">
+      <input name="q" aria-label="חיפוש באתר" placeholder="חיפוש באתר" /><button
+        type="submit">חיפוש</button>
+    </form>
+  </section>
+  <section class="reader-cta" aria-labelledby="reader-cta-title">
+    <div>
+      <p class="kicker">אפליקציית הקריאה</p>
+      <h2 id="reader-cta-title">קורא EPUB בטלפון, בלי התקנה מחנות</h2>
+      <p>
+        פותח קובצי EPUB ישירות בדפדפן, אפשר להוסיף אותו למסך הבית, הוא עובד גם
+        בלי רשת וזוכר איפה הפסקתם.
+      </p>
+    </div>
+    <a class="button-primary" href="/reader/">פתיחת הקורא</a>
+  </section>
+  <div class="home-grid" data-pagefind-body>
+    {
+      stories.length ? (
+        <section class="home-section featured">
+          <>
+            <p class="kicker">בחירת העורכת</p>
+            <h2>מאמרים נבחרים</h2>
+            <div class="story-grid">
+              {stories.map((article) => (
+                <StoryCard {article} />
+              ))}
+            </div>
+          </>
+        </section>
+      ) : null
+    }
+    <section class="home-section">
+      <p class="kicker">תוכן עניינים</p><h2>מדורים</h2><SectionList {counts} />
+    </section>
+    <section class="home-section">
+      <div class="strip">
+        <a href="/tools/"
+          ><strong>כלים</strong><span>קורא EPUB ובדיקות שימושיות.</span></a
+        ><a href="/resources/"
+          ><strong>משאבים</strong><span>קישורים, תוכנות וניסויים.</span></a>
+      </div>
+    </section>
+    <section class="home-section">
+      <p class="kicker">עדכונים</p><h2>עודכן לאחרונה</h2><EntryList
+        articles={articles.slice(0, 5)}
+      />
+    </section>
+  </div>
+</BaseLayout>

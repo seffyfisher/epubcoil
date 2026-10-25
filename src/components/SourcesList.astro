@@ -1,0 +1,26 @@
+---
+interface Props {
+  sources: { title: string; url: string }[];
+}
+
+const { sources } = Astro.props;
+---
+
+<section id="sources" class="sources">
+  <h2>
+    מקורות<a class="heading-anchor" href="#sources" aria-label="קישור למקורות"
+      >#</a>
+  </h2>
+  <ol>
+    {
+      sources.map((source) => (
+        <li>
+          <a href={source.url} rel="noopener">
+            {source.title}
+          </a>
+          <small>{new URL(source.url).hostname}</small>
+        </li>
+      ))
+    }
+  </ol>
+</section>

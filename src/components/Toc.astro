@@ -1,0 +1,32 @@
+---
+interface Props {
+  headings: { depth: number; slug: string; text: string }[];
+  hasFaq: boolean;
+}
+
+const { headings, hasFaq } = Astro.props;
+const articleHeadings = headings.filter((heading) => heading.depth === 2);
+---
+
+<aside class="toc">
+  <details open>
+    <summary>במאמר</summary>
+    <ol>
+      {
+        articleHeadings.map((heading) => (
+          <li>
+            <a href={`#${heading.slug}`}>{heading.text}</a>
+          </li>
+        ))
+      }
+      {
+        hasFaq && (
+          <li>
+            <a href="#faq">שאלות נפוצות</a>
+          </li>
+        )
+      }
+      <li><a href="#sources">מקורות</a></li>
+    </ol>
+  </details>
+</aside>

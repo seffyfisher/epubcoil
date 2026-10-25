@@ -1,0 +1,58 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+const items = (await getCollection("glossary", ({ data }) => !data.draft)).sort(
+  (a, b) => a.data.term.localeCompare(b.data.term, "he"),
+);
+const groups = items.reduce<Record<string, typeof items>>((result, item) => {
+  const letter = item.data.term.trim().charAt(0);
+  (result[letter] ??= []).push(item);
+  return result;
+}, {});
+const graph = [
+  {
+    "@type": "DefinedTermSet",
+    name: "מילון מונחי EPUB",
+    hasDefinedTerm: items.map((item) => ({
+      "@type": "DefinedTerm",
+      name: item.data.term,
+      url: `https://epub.co.il/glossary/${item.id}/`,
+    })),
+  },
+];
+---
+
+<BaseLayout
+  title="מילון מונחי EPUB | epub.co.il"
+  description="מילון עברי למונחים בספרים דיגיטליים וב־EPUB."
+  jsonld={graph}
+  ><section class="page-head" data-pagefind-body>
+    <p class="kicker">מילון מונחים</p><h1>מילון EPUB</h1><p class="lede">
+      מונחי יסוד, בעברית ובאנגלית, עם הקשר קצר ומקורות.
+    </p>
+  </section><nav class="glossary-jump" aria-label="קפיצה לאות">
+    {
+      Object.keys(groups).map((letter) => (
+        <a href={`#letter-${letter}`}>{letter}</a>
+      ))
+    }
+  </nav>{
+    Object.entries(groups).map(([letter, entries]) => (
+      <section class="letter-group" id={`letter-${letter}`}>
+        <>
+          <h2>{letter}</h2>
+          <ol class="entry-list">
+            {entries?.map((item) => (
+              <li>
+                <h2>
+                  <a href={`/glossary/${item.id}/`}>{item.data.term}</a>
+                </h2>
+                <p>{item.data.short}</p>
+              </li>
+            ))}
+          </ol>
+        </>
+      </section>
+    ))
+  }</BaseLayout
+>

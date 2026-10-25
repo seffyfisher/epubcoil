@@ -1,0 +1,28 @@
+---
+import { articlePath } from "../lib/links";
+
+const { previous, next } = Astro.props;
+---
+
+<nav class="prev-next" aria-label="מאמרים סמוכים">
+  {
+    previous ? (
+      <a href={articlePath(previous)}>
+        <small>המאמר הקודם</small>
+        {previous.data.title}
+      </a>
+    ) : (
+      <span />
+    )
+  }
+  {
+    next ? (
+      <a href={articlePath(next)}>
+        <small>המאמר הבא</small>
+        {next.data.title}
+      </a>
+    ) : (
+      <span />
+    )
+  }
+</nav>

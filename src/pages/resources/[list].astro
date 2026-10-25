@@ -1,0 +1,90 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { formatHebrewDate } from "../../lib/dates";
+const labels = {
+  links: "קישורים",
+  software: "תוכנות",
+  experiments: "ניסויים",
+  leaders: "דמויות וארגונים",
+  providers: "ספקי שירות",
+} as const;
+export async function getStaticPaths() {
+  return ["links", "software", "experiments", "leaders", "providers"].map(
+    (list) => ({ params: { list } }),
+  );
+}
+const list = Astro.params.list as keyof typeof labels;
+const items = await getCollection(list);
+const grouped = items.reduce<Record<string, typeof items>>((result, item) => {
+  const name =
+    item.data.category ?? item.data.kind ?? item.data.region ?? "כללי";
+  (result[name] ??= []).push(item);
+  return result;
+}, {});
+const groups = Object.entries(grouped);
+const graph = [
+  {
+    "@type": "ItemList",
+    name: labels[list],
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.data.title ?? item.data.name,
+      url: item.data.url,
+    })),
+  },
+];
+const tags = (data: any) =>
+  [
+    data.category,
+    data.kind,
+    data.region,
+    data.lang,
+    data.pricing,
+    ...(data.platforms ?? []),
+    ...(data.services ?? []),
+  ]
+    .filter(Boolean)
+    .join(" · ");
+---
+
+<BaseLayout
+  title={`${labels[list]} | משאבים epub.co.il`}
+  description={`${labels[list]} לעבודה עם ספרים דיגיטליים.`}
+  jsonld={graph}
+  ><section class="page-head">
+    <p class="kicker">משאבים</p><h1>{labels[list]}</h1>
+  </section><section class="resource-list" data-pagefind-body>
+    {
+      list === "providers" ? (
+        <p class="notice">
+          רשימה אינפורמטיבית בלבד, לא המלצה ולא שיתוף פעולה; הסדר אינו מדרג.
+        </p>
+      ) : null
+    }{
+      groups.map(([name, entries]) => (
+        <section class="resource-group">
+          <h2>{name}</h2>
+          {entries?.map((item) => (
+            <article class="resource">
+              <h3>
+                <a href={item.data.url} rel="noopener">
+                  {item.data.title ?? item.data.name}
+                </a>
+              </h3>
+              <p>{item.data.description ?? item.data.why}</p>
+              {item.data.rtlNotes ? <p>{item.data.rtlNotes}</p> : null}
+              <p class="resource-meta">
+                {tags(item.data)} · נבדק לאחרונה{" "}
+                <time datetime={item.data.checked.toISOString()}>
+                  {formatHebrewDate(item.data.checked)}
+                </time>
+              </p>
+            </article>
+          ))}
+        </section>
+      ))
+    }{items.length === 0 ? <p>הרשימה בהכנה.</p> : null}
+  </section></BaseLayout
+>

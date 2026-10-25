@@ -1,0 +1,71 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  canonical: string;
+  type?: "website" | "article";
+  modified?: Date;
+  jsonld?: Record<string, unknown>[];
+}
+const {
+  title,
+  description,
+  canonical,
+  type = "website",
+  modified,
+  jsonld = [],
+} = Astro.props;
+---
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="manifest" href="/manifest.webmanifest" />
+<link rel="apple-touch-icon" href="/icons/icon-180.png" />
+<meta name="theme-color" content="#17191d" />
+<link
+  rel="preload"
+  href="/noto-sans-hebrew.woff2"
+  as="font"
+  type="font/woff2"
+  crossorigin
+/>
+<link
+  rel="preload"
+  href="/noto-sans-hebrew-latin.woff2"
+  as="font"
+  type="font/woff2"
+  crossorigin
+/>
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+<link
+  rel="alternate"
+  type="application/rss+xml"
+  title="epub.co.il RSS"
+  href="/rss.xml"
+/>
+<meta property="og:type" content={type} />
+<meta property="og:locale" content="he_IL" />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:image" content="https://epub.co.il/og/brand.png" />
+{
+  modified && (
+    <meta property="article:modified_time" content={modified.toISOString()} />
+  )
+}
+<meta name="twitter:card" content="summary_large_image" />
+{
+  jsonld.length > 0 && (
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify({
+        "@context": "https://schema.org",
+        "@graph": jsonld,
+      })}
+    />
+  )
+}

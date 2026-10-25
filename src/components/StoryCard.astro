@@ -1,0 +1,12 @@
+---
+import { articlePath, inlineMarkup } from "../lib/links";
+import { sectionMap } from "../lib/sections";
+
+const { article } = Astro.props;
+---
+
+<article class="story">
+  <p class="meta">{sectionMap[article.data.section]}</p>
+  <h3><a href={articlePath(article)}>{article.data.title}</a></h3>
+  <p set:html={inlineMarkup(article.data.answer)} />
+</article>

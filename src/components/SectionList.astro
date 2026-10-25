@@ -1,0 +1,17 @@
+---
+import { sections } from "../lib/sections";
+
+const { counts } = Astro.props;
+---
+
+<nav class="section-index" aria-label="מדורי האתר">
+  {
+    sections.map((section) => (
+      <a href={`/${section.key}/`}>
+        <strong>{section.title}</strong>
+        <span>{section.description}</span>
+        <small>{counts.get(section.key) ?? 0} מאמרים</small>
+      </a>
+    ))
+  }
+</nav>

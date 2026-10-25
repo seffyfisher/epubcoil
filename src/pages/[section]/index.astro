@@ -1,0 +1,65 @@
+---
+import { inlineMarkup } from "../../lib/links";
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { articlePath } from "../../lib/links";
+import { formatHebrewDate } from "../../lib/dates";
+import {
+  plannedTopics,
+  sectionMap,
+  sections,
+  titleForSlug,
+  type SectionKey,
+} from "../../lib/sections";
+
+export async function getStaticPaths() {
+  return sections.map(({ key }) => ({ params: { section: key } }));
+}
+const section = Astro.params.section as SectionKey;
+const list = (
+  await getCollection(
+    "articles",
+    ({ data }) => data.section === section && !data.draft,
+  )
+).sort((a, b) => a.data.order - b.data.order);
+const intro = `כאן נאספים מאמרים על ${sectionMap[section]}. כל טקסט נכתב כדי לתת תשובה שימושית לפני הפרטים הטכניים, ולסמן מקורות להמשך קריאה.`;
+---
+
+<BaseLayout title={`${sectionMap[section]} | epub.co.il`} description={intro}
+  ><section class="page-head" data-pagefind-body>
+    <p class="kicker">מדור</p><h1>{sectionMap[section]}</h1><p class="lede">
+      {intro}
+    </p>
+  </section><ol class="entry-list">
+    {
+      list.map((article) => (
+        <li>
+          <>
+            <h2>
+              <a href={articlePath(article)}>{article.data.title}</a>
+            </h2>
+            <p set:html={inlineMarkup(article.data.answer)} />
+            <p class="entry-meta">
+              <time datetime={article.data.updated.toISOString()}>
+                {formatHebrewDate(article.data.updated)}
+              </time>
+            </p>
+          </>
+        </li>
+      ))
+    }
+  </ol>{
+    list.length === 0 ? (
+      <section class="planned">
+        <>
+          <h2>בקרוב</h2>
+          <ul>
+            {plannedTopics[section].map((slug) => (
+              <li>{titleForSlug(slug)}</li>
+            ))}
+          </ul>
+        </>
+      </section>
+    ) : null
+  }</BaseLayout
+>
