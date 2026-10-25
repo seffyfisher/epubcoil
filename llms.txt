@@ -25,17 +25,20 @@
 - מה זה EPUB — https://epub.co.il/basics/what-is-epub/
   EPUB הוא פורמט פתוח לפרסום ספרים דיגיטליים, המבוסס על טכנולוגיות ווב ונארז בדרך כלל כקובץ ZIP. בקורא תואם הטקסט יכול להסתגל למסך, לגודל האות ולהעדפות הקריאה, או להישמר בפריסה קבועה כשזו נחוצה.
 
-- איך שולחים EPUB לקינדל — https://epub.co.il/reading/send-to-kindle/
-  אפשר לשלוח EPUB אישי לספריית Kindle דרך Send to Kindle בדפדפן, ביישומי Kindle או בדוא״ל לחשבון Kindle. השירות מקבל EPUB, ממיר את המסמך לפורמט קריאה של Kindle ומסנכרן אותו אל הספרייה.
-
 - איך פותחים קובץ EPUB בטלפון, במחשב ובקורא דיו אלקטרוני — https://epub.co.il/reading/open-epub/
   כדי לפתוח EPUB מורידים או מעבירים את הקובץ לאפליקציית קריאה שתומכת בו, ואז בוחרים בה מתוך שיתוף הקובץ או מתוך אפשרות ייבוא. במחשב אפשר להשתמש למשל ב־Thorium Reader או Calibre, ובמכשירי Apple ב־Apple Books; קובצי DRM עשויים להיפתח רק באפליקציה או בחשבון שהופצו דרכם.
+
+- איך שולחים EPUB לקינדל — https://epub.co.il/reading/send-to-kindle/
+  אפשר לשלוח EPUB אישי לספריית Kindle דרך Send to Kindle בדפדפן, ביישומי Kindle או בדוא״ל לחשבון Kindle. השירות מקבל EPUB, ממיר את המסמך לפורמט קריאה של Kindle ומסנכרן אותו אל הספרייה.
 
 - EPUB בעברית: כיוון ימין־לשמאל (RTL) בשלוש שכבות — https://epub.co.il/hebrew/rtl-basics/
   ספר EPUB עברי תקין מגדיר RTL בשלוש שכבות: `page-progression-direction="rtl"` ב־spine, ‏`dir="rtl"` ותגי שפה במסמכי התוכן, ו־CSS תומך. CSS לבדו אינו תחליף לכיוון ולשפה במבנה המסמך.
 
 - CSS ב־EPUB: מה עובד, מה לא ואיך כותבים גיליון סגנון לספר עברי — https://epub.co.il/css/css-in-epub/
   CSS ב־EPUB מתאר את עיצוב הספר, אך מערכת הקריאה והקורא יכולים להחליף חלק ממנו כדי לאפשר גודל גופן, שוליים ונושא תצוגה. stylesheet טוב נשען על HTML סמנטי, יחידות יחסיות וכללים גמישים, ונבדק בקוראים אמיתיים.
+
+- רשימת בדיקה לעיצוב ספר דיגיטלי (על פי Friends of EPUB) — https://epub.co.il/design/ebook-design-checklist/
+  ספר דיגיטלי טוב מתוכנן לשרוד את השינויים שהקורא עושה בו: גופן אחר, גודל גדול, מצב לילה, מסך דיו אלקטרוני והקראה. בפועל זה אומר HTML סמנטי, CSS ביחידות יחסיות שאינו כופה צבעים ויישור, תמונות גמישות, ובספר עברי גם dir="rtl", ‏lang="he" וגופן מוטמע שתומך בניקוד.
 
 - מבנה קובץ EPUB: מה יש בתוך הקובץ — https://epub.co.il/basics/epub-file-structure/
   EPUB הוא ארכיון ZIP בעל מבנה מוסכם: קובץ mimetype ראשון ולא דחוס, container.xml שמפנה ל־OPF, ומסמכי תוכן ומשאבים המנויים במסמך החבילה. ה־manifest אומר מה נמצא בספר וה־spine אומר באיזה סדר לקרוא אותו.
@@ -60,7 +63,7 @@
 
 - software (16): https://epub.co.il/resources/software/
 
-- experiments (12): https://epub.co.il/resources/experiments/
+- experiments (13): https://epub.co.il/resources/experiments/
 
 - leaders (14): https://epub.co.il/resources/leaders/
 
