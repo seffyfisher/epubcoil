@@ -82,3 +82,11 @@
   kind: audio-video
   creator: W3C
   checked: 2026-10-24
+- id: liza-daly-seraphs
+  title: Seraphs — Liza Daly
+  url: https://lizadaly.com/
+  description: ספר שנוצר בידי מחשב (2014) בהשראת כתב היד של וויניץ׳, שהוצג בתערוכת Author Function של ספריות MIT ב־2018.
+  kind: generative
+  creator: Liza Daly
+  year: 2014
+  checked: 2026-10-25
