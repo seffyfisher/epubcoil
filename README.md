@@ -13,7 +13,6 @@ npm install
 npm run dev       # שרת פיתוח
 npm run build     # astro build ואז אינדקס חיפוש של Pagefind
 npm run preview   # הצגת dist מקומית
-npm run vendor    # העתקת jszip ו־epub.js אל public/vendor (קבצים אלה נשמרים ב־git)
 ```
 
 ## מבנה
@@ -22,7 +21,7 @@ npm run vendor    # העתקת jszip ו־epub.js אל public/vendor (קבצים 
 - `src/data/resources/*.yaml` — רשימות המשאבים (קישורים, תוכנות, ניסויים, דמויות מובילות, ספקים).
 - `src/pages/` — תבניות העמודים, `rss.xml`, `llms.txt`, `llms-full.txt`, תמונת OG.
 - `src/pages/tools/` ו־`src/scripts/` — בודק ה־EPUB והצ'קליסט. ה־JavaScript נטען רק בעמודי הכלים.
-- `public/reader/` — הקורא הנוכחי (עמוד סטטי, PWA: `manifest.webmanifest` ו־`reader/sw.js`). יוחלף בקורא החדש.
+- `public/reader/` — קורא ה־EPUB (גרסה 2, foliate-js), אפליקציית PWA סטטית. המקור מתוחזק בענף `feature/reader-v2` (תיקייה `reader/`) ומועתק לכאן כמו שהוא; אחרי שינוי בקורא יש להעלות את `VERSION` ב־`reader/sw.js`.
 
 ## הוספת מאמר
 

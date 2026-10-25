@@ -1,0 +1,49 @@
+{
+  "name": "קורא EPUB — epub.co.il",
+  "short_name": "קורא EPUB",
+  "lang": "he",
+  "dir": "rtl",
+  "display": "standalone",
+  "display_override": ["standalone"],
+  "start_url": "./",
+  "scope": "./",
+  "id": "./",
+  "theme_color": "#faf8f2",
+  "background_color": "#faf8f2",
+  "description": "קורא EPUB פרטי לקריאת ספרים דיגיטליים במכשיר עבור epub.co.il",
+  "categories": ["books"],
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "./icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "file_handlers": [
+    {
+      "action": "./",
+      "accept": {
+        "application/epub+zip": [".epub"]
+      }
+    }
+  ]
+}
