@@ -6,6 +6,7 @@ export const organization = {
   "@type": "Organization",
   name: "epub.co.il",
   url: "https://epub.co.il/",
+  logo: "https://epub.co.il/icons/icon-512.png",
 };
 
 export const websiteJsonLd = {

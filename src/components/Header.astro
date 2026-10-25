@@ -1,5 +1,6 @@
 ---
 import ThemeToggle from "./ThemeToggle.astro";
+import Logo from "./Logo.astro";
 import { sections } from "../lib/sections";
 const path = Astro.url.pathname;
 ---
@@ -7,7 +8,7 @@ const path = Astro.url.pathname;
 <header class="masthead">
   <div class="shell masthead-top">
     <a class="brand" href="/" aria-label="epub.co.il, דף הבית"
-      ><bdi dir="ltr">epub.co.il</bdi><span>ידע עברי על ספרים דיגיטליים</span
+      ><Logo size={32} /><span>ידע עברי על ספרים דיגיטליים</span
       ></a
     >
     <nav class="primary-nav" aria-label="ניווט ראשי">
