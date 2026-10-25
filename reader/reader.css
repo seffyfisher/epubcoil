@@ -422,6 +422,11 @@ select:focus-visible,
   letter-spacing: 0.06em;
   text-transform: lowercase;
 }
+.eyebrow.brand-mark {
+  display: flex;
+  margin-block-end: 8px;
+  color: var(--ink);
+}
 
 .library-head h1 {
   margin: 0;

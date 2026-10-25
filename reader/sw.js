@@ -8,7 +8,7 @@
  */
 
 // Bump VERSION on every deploy that changes any shell file (triggers the update prompt).
-const VERSION = 'epubcoil-reader-v2-20261024-r8';
+const VERSION = 'epubcoil-reader-v2-20261025-r9';
 
 const SHELL_ASSETS = [
   './',
